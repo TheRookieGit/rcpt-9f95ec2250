@@ -27,10 +27,10 @@
   body {
     margin: 0; color: var(--text); background: var(--bg);
     font: 16px/1.45 -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", sans-serif;
-    padding: env(safe-area-inset-top) 0 calc(88px + env(safe-area-inset-bottom));
+    padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
     -webkit-font-smoothing: antialiased;
   }
-  main { max-width: 640px; margin: 0 auto; padding: 0 16px; }
+  main { max-width: 1440px; margin: 0 auto; padding: 0 16px 20px; }
   .num { font-variant-numeric: tabular-nums; }
   h1 { font-size: 30px; line-height: 1.15; letter-spacing: -.02em; margin: 22px 0 14px; font-weight: 700; }
   h2 { font-size: 13px; font-weight: 600; letter-spacing: .02em; color: var(--muted); margin: 22px 4px 8px; display: flex; justify-content: space-between; }
@@ -45,21 +45,10 @@
   .btn:disabled { opacity: .45; }
   input[type=text], input[type=password], input[type=date] {
     font: inherit; color: var(--text); width: 100%; padding: 13px 14px; border-radius: 14px; border: 1px solid var(--line);
-    background: var(--surface); outline: none; min-width: 0;
+    background: var(--surface); outline: none; min-width: 0; min-height: 44px;
   }
+  input:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
   input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
-
-  /* tab bar */
-  nav {
-    position: fixed; left: 0; right: 0; bottom: 0; z-index: 10; display: flex; justify-content: center;
-    padding: 8px 16px calc(8px + env(safe-area-inset-bottom));
-    background: color-mix(in srgb, var(--bg) 82%, transparent); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
-    border-top: 1px solid var(--line);
-  }
-  nav .inner { display: flex; width: 100%; max-width: 640px; }
-  nav button { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 0; font-size: 11px; font-weight: 600; color: var(--faint); }
-  nav button.on { color: var(--accent); }
-  nav svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 
   /* cards */
   .card { background: var(--surface); border-radius: 18px; padding: 16px; margin: 0 0 10px; box-shadow: var(--shadow); border: 1px solid var(--line); }
@@ -92,15 +81,12 @@
   .datefix label { color: var(--muted); font-size: 13px; white-space: nowrap; }
   .datefix input { padding: 8px 10px; }
 
-  /* chat */
-  body.chatting { padding-bottom: calc(150px + env(safe-area-inset-bottom)); }
-  .chatbar {
-    position: fixed; left: 0; right: 0; bottom: calc(64px + env(safe-area-inset-bottom)); z-index: 9; padding: 8px 16px;
-    background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
-  }
-  .chatbar .inner { display: flex; gap: 8px; max-width: 640px; margin: 0 auto; }
-  .chatbar .new { flex: none; width: 46px; border-radius: 14px; background: var(--surface); border: 1px solid var(--line); color: var(--muted); display: grid; place-items: center; }
-  .chatbar .new svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  /* conversation */
+  .chatbar { padding: 12px 0 0; border-top: 1px solid var(--line); margin-top: 14px; }
+  .chatbar .inner { display: flex; gap: 8px; }
+  #q { flex: 1; }
+  #go { min-width: 68px; }
+  #go.stopping { background: var(--surface-2); color: var(--text); border: 1px solid var(--line); }
   #chatLog { display: grid; gap: 14px; }
   .bubble { padding: 11px 14px; border-radius: 18px; max-width: 88%; overflow-wrap: anywhere; white-space: pre-wrap; }
   .bubble.me { justify-self: end; background: var(--accent-soft); border-bottom-right-radius: 6px; }
@@ -132,7 +118,7 @@
   .tools { display: flex; gap: 8px; align-items: center; margin: 0 0 6px; }
   .tools .pill { display: flex; align-items: center; gap: 6px; padding: 9px 14px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); font-size: 14px; font-weight: 600; }
   .tools .pill.on { color: var(--accent); }
-  .tools input[type=date] { padding: 8px 12px; width: auto; flex: 1; border-radius: 999px; font-size: 14px; }
+  .tools input[type=text] { padding: 8px 12px; width: auto; flex: 1; border-radius: 999px; font-size: 14px; }
   .empty { text-align: center; color: var(--muted); padding: 48px 16px; }
 
   /* lightbox */
@@ -141,10 +127,73 @@
   #lightbox button { position: fixed; top: calc(12px + env(safe-area-inset-top)); right: 14px; width: 38px; height: 38px; border-radius: 50%; background: rgba(255, 255, 255, .18); color: #fff; font-size: 20px; }
 
   /* login */
-  .login { padding-top: 14vh; text-align: center; }
+  .login { max-width: 420px; margin: auto; padding-top: 14vh; text-align: center; }
   .login .logo { width: 64px; height: 64px; margin: 0 auto 14px; border-radius: 18px; background: var(--accent); color: var(--on-accent); display: grid; place-items: center; }
   .login svg { width: 34px; height: 34px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
   .login .row { display: flex; gap: 8px; margin-top: 18px; }
+  .app-head { display: flex; align-items: center; gap: 12px; padding: 22px 4px; }
+  .app-head h1 { margin: 0; font-size: 25px; flex: 1; }
+  .badge { font-size: 13px; color: var(--accent); background: var(--accent-soft); padding: 6px 10px; border-radius: 999px; white-space: nowrap; }
+  .quiet { color: var(--accent); font-size: 14px; min-height: 44px; padding: 0 8px; }
+  .workspace { display: grid; gap: 14px; align-items: start; }
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 16px; min-width: 0; box-shadow: var(--shadow); }
+  .panel-head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .panel-head h2 { font-size: 17px; color: var(--text); margin: 0; flex: 1; }
+  .panel-head .mark { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 10px; background: var(--accent-soft); color: var(--accent); font-size: 19px; }
+  .panel-head .quiet { font-size: 13px; }
+  .pick { padding: 18px 12px; border-radius: 14px; gap: 5px; }
+  .pick strong { font-size: 16px; }
+  .pick .ic { width: 38px; height: 38px; }
+  .pick svg { width: 22px; height: 22px; }
+  .pick span.muted { font-size: 12px; }
+  #uploads { display: grid; gap: 8px; margin-top: 12px; max-height: 240px; overflow: auto; }
+  #uploads:empty { display: none; }
+  #uploads .card { margin: 0; padding: 12px; box-shadow: none; }
+  #browseList { max-height: 54dvh; overflow: auto; overscroll-behavior: contain; padding: 0 1px; }
+  #chatScroll { max-height: 48dvh; min-height: 100px; overflow: auto; overscroll-behavior: contain; padding: 1px; }
+  .months { margin: 0 -6px; padding: 2px 6px 12px; }
+  .tools { flex-wrap: wrap; margin-bottom: 12px; }
+  .tools input[type=text] { flex: 1; width: 110px; font-size: 16px; }
+  .tools form { display: flex; flex: 1; gap: 4px; }
+  .cal { box-shadow: none; margin-bottom: 12px; }
+  .cal .grid button { min-height: 32px; aspect-ratio: auto; padding: 5px; }
+  .summary { gap: 8px; flex-wrap: wrap; margin: 8px 0 12px; }
+  .summary b { font-size: 17px; }
+  .card .actions { display: flex; align-items: center; gap: 6px; margin: 10px -5px -6px; }
+  .card .actions button { min-height: 44px; font-size: 13px; padding: 0 7px; color: var(--accent); }
+  .card .actions .delete { color: var(--muted); margin-left: auto; }
+  .card .actions button:hover { background: var(--accent-soft); border-radius: 8px; }
+  .receipt-date { font-variant-numeric: tabular-nums; }
+  .hint { margin: 12px 0 0; font-size: 12px; }
+  .chat-note { margin: 0 0 10px; font-size: 13px; color: var(--muted); }
+  #notice { margin: 0 0 12px; padding: 10px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); font-size: 14px; }
+  button:disabled { cursor: default; opacity: .45; }
+  dialog { width: min(420px, calc(100% - 32px)); color: var(--text); background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 22px; box-shadow: 0 20px 80px #0003; }
+  dialog::backdrop { background: #0007; backdrop-filter: blur(3px); }
+  dialog h2 { font-size: 20px; color: var(--text); margin: 0 0 8px; }
+  dialog p { font-size: 14px; color: var(--muted); overflow-wrap: anywhere; }
+  dialog label { display: block; font-size: 14px; margin-bottom: 8px; }
+  .date-entry { display: grid; gap: 10px; }
+  .date-entry input { width: 100%; }
+  .dialog-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 22px; }
+  .dialog-actions .cancel { background: var(--surface-2); color: var(--text); }
+  .dialog-actions .danger { background: var(--bad); color: #fff; }
+  @media (min-width: 1000px) {
+    .workspace { grid-template-columns: 248px minmax(340px,1fr) minmax(300px,360px); align-items: stretch; height: calc(100dvh - 112px); min-height: 550px; }
+    .panel { display: flex; flex-direction: column; min-height: 0; }
+    #browseList { flex: 1; max-height: none; }
+    #chatScroll { flex: 1; max-height: none; }
+    #paneChat { grid-column: 3; grid-row: 1; }
+    #paneBrowse { grid-column: 2; grid-row: 1; }
+    #uploads { max-height: none; }
+  }
+  @media (max-width: 380px) {
+    main { padding-left: 10px; padding-right: 10px; }
+    .app-head { gap: 4px; }
+    .app-head h1 { font-size: 22px; }
+    .panel { padding: 13px; }
+    .badge { padding: 5px 7px; }
+  }
 </style>
 </head>
 <body>
@@ -161,185 +210,384 @@
   </section>
 
   <section id="app" class="hidden">
-    <h1 id="title">上传</h1>
-
-    <div id="paneUpload">
-      <label class="pick" for="file">
-        <span class="ic"><svg viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></span>
-        <strong>拍照或选择照片</strong>
-        <span class="muted">可以一次选多张，自动识别日期、商家和商品</span>
-      </label>
-      <input id="file" type="file" accept="image/*" multiple>
-      <div id="uploads" style="margin-top:16px"></div>
-      <p class="hint">上传的小票会在下次打开 Mac 上的 AutoReceipt 时，归入 Receipt 文件夹。</p>
-    </div>
-
-    <div id="paneChat" class="hidden">
-      <div id="chatEmpty">
-        <p class="hint">问问你的小票：某次买了什么、去某类店几次、某段时间花了多少。只回答和小票有关的问题。</p>
-        <div id="historyBox">
-          <p class="hint" id="historyLabel">最近问过</p>
-          <div id="history" class="chips"></div>
+    <header class="app-head">
+      <h1>小票工作台</h1>
+      <span id="libraryCount" class="badge num">小票库</span>
+      <button id="refresh" class="quiet" type="button">刷新</button>
+    </header>
+    <div id="notice" class="hidden" role="status" aria-live="polite"></div>
+    <div class="workspace">
+      <section id="paneUpload" class="panel" aria-labelledby="uploadTitle">
+        <div class="panel-head"><span class="mark" aria-hidden="true">↓</span><h2 id="uploadTitle">归档</h2></div>
+        <label class="pick" for="file">
+          <span class="ic"><svg viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></span>
+          <strong>拍照或选择照片</strong>
+          <span class="muted">支持多张，自动识别日期、商家和商品</span>
+        </label>
+        <input id="file" type="file" accept="image/*" multiple>
+        <div id="uploads" aria-live="polite"></div>
+        <p class="hint">照片将在 Mac 下次同步时归档为 PDF。</p>
+      </section>
+      <section id="paneBrowse" class="panel" aria-labelledby="browseTitle">
+        <div class="panel-head"><span class="mark" aria-hidden="true">▦</span><h2 id="browseTitle">小票库</h2></div>
+        <div id="months" class="months" aria-label="月份"></div>
+        <div class="tools">
+          <button class="pill" id="calToggle" type="button" aria-expanded="false" aria-controls="cal">日历</button>
+          <form id="jumpForm"><input id="jump" type="text" inputmode="numeric" placeholder="跳到日期，如 10-8" aria-label="跳到日期" autocomplete="off"><button class="quiet" type="submit">查找</button></form>
         </div>
-      </div>
-      <div id="chatLog"></div>
-    </div>
-
-    <div id="paneBrowse" class="hidden">
-      <div id="months" class="months"></div>
-      <div class="tools">
-        <button class="pill" id="calToggle">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
-          日历
-        </button>
-        <input id="jump" type="date" aria-label="跳到日期">
-      </div>
-      <div id="cal" class="cal hidden"></div>
-      <div id="browseSummary" class="summary"></div>
-      <div id="browseList"></div>
+        <div id="cal" class="cal hidden"></div>
+        <div id="browseSummary" class="summary"></div>
+        <div id="browseList" aria-busy="false"></div>
+      </section>
+      <section id="paneChat" class="panel" aria-labelledby="chatTitle">
+        <div class="panel-head"><span class="mark" aria-hidden="true">↳</span><h2 id="chatTitle">小票对话</h2><button class="quiet" id="newChat" type="button" disabled>新对话</button></div>
+        <div id="chatScroll">
+          <div id="chatEmpty">
+            <p class="chat-note">查询商家、商品和消费记录。</p>
+            <div class="chips"><button class="chip" data-question="上次去 Costco 买了什么？">上次去 Costco 买了什么？</button><button class="chip" data-question="最近一周花了多少钱？">最近一周花了多少钱？</button></div>
+            <div id="historyBox"><p class="hint">最近问过</p><div id="history" class="chips"></div></div>
+          </div>
+          <div id="chatLog" role="log" aria-live="polite" aria-relevant="additions text"></div>
+        </div>
+        <div class="chatbar"><form id="chatForm" class="inner">
+          <input id="q" type="text" placeholder="输入小票相关问题" aria-label="小票问题" enterkeyhint="send" autocomplete="off" maxlength="500">
+          <button class="btn" id="go" type="submit" disabled>发送</button>
+        </form></div>
+      </section>
     </div>
   </section>
 </main>
 
-<div id="chatbar" class="chatbar hidden">
-  <div class="inner">
-    <button class="new hidden" id="newChat" aria-label="新对话"><svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13 7l4 4"/></svg></button>
-    <input id="q" type="text" placeholder="问问你的小票" enterkeyhint="send" autocomplete="off">
-    <button class="btn" id="go">发送</button>
-  </div>
-</div>
-
-<nav id="tabs" class="hidden">
-  <div class="inner">
-    <button data-tab="upload" class="on"><svg viewBox="0 0 24 24"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 15v4a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-4"/></svg>上传</button>
-    <button data-tab="chat"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>对话</button>
-    <button data-tab="browse"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>浏览</button>
-  </div>
-</nav>
-
-<div id="lightbox" class="hidden"><img alt=""><button aria-label="关闭">✕</button></div>
+<dialog id="dateDialog" aria-labelledby="dateTitle"><form id="dateForm" novalidate>
+  <h2 id="dateTitle">修改小票日期</h2><p id="dateMerchant"></p>
+  <label for="receiptDate">消费日期</label>
+  <div class="date-entry"><input id="receiptDate" type="text" inputmode="numeric" placeholder="YYYY-MM-DD" autocomplete="off" required><input id="receiptCalendar" type="date" aria-label="选择日期"></div>
+  <p>支持 2026-10-08、20261008、10-8。</p><p id="dateError" class="bad" role="alert"></p>
+  <p>只更新项目库，不修改 PDF 源文件。</p>
+  <div class="dialog-actions"><button type="button" class="btn cancel" id="dateCancel">取消</button><button type="submit" class="btn" id="dateSave">保存日期</button></div>
+</form></dialog>
+<dialog id="deleteDialog" aria-labelledby="deleteTitle"><form id="deleteForm">
+  <h2 id="deleteTitle">从项目库删除？</h2><p id="deleteMerchant"></p><p>只删除这张小票的库内记录。同页其他小票、电脑上的 PDF 源文件都会保留。</p><p id="deleteError" class="bad" role="alert"></p>
+  <div class="dialog-actions"><button type="button" class="btn cancel" id="deleteCancel">取消</button><button type="submit" class="btn danger" id="deleteSave">删除小票</button></div>
+</form></dialog>
+<div id="lightbox" class="hidden"><img alt="小票原件"><button aria-label="关闭">✕</button></div>
 
 <script>
-// Your Supabase project's function URL.
+// Public function endpoint; passcode and API keys are never embedded in the page.
 const API = "https://orvuihiojdplciilktvm.supabase.co/functions/v1/api";
-
 const $ = (id) => document.getElementById(id);
 const store = {
   get(k) { try { return localStorage.getItem(k); } catch { return null; } },
-  set(k, v) { try { localStorage.setItem(k, v); } catch {} },
+  set(k,v) { try { localStorage.setItem(k,v); } catch {} },
   del(k) { try { localStorage.removeItem(k); } catch {} },
 };
 let passcode = store.get("passcode") || "";
-
-async function call(body) {
-  let res;
-  try {
-    res = await fetch(API, { method: "POST", headers: { "content-type": "application/json", "x-passcode": passcode }, body: JSON.stringify(body) });
-  } catch { throw new Error("网络不通，请稍后再试"); }
-  const json = await res.json().catch(() => ({}));
-  if (res.status === 401) { store.del("passcode"); passcode = ""; show(); throw new Error(json.error || "口令不对"); }
-  if (!res.ok) throw new Error(json.error || `出错了（${res.status}）`);
-  return json;
-}
-
 const el = (tag, attrs = {}, ...kids) => {
   const n = document.createElement(tag);
-  for (const [k, v] of Object.entries(attrs)) {
-    if (k === "class") n.className = v; else if (k.startsWith("on")) n[k] = v; else n.setAttribute(k, v);
+  for (const [k,v] of Object.entries(attrs)) {
+    if (k === "class") n.className = v; else if (k.startsWith("on")) n[k] = v; else n.setAttribute(k,v);
   }
   for (const k of kids.flat()) if (k != null && k !== false) n.append(k);
   return n;
 };
-const fmt = new Intl.NumberFormat("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-const SYM = { USD: "$", CNY: "¥", RMB: "¥", EUR: "€", GBP: "£" };
-const money = (n, cur) => (SYM[(cur || "USD").toUpperCase()] ?? cur + " ") + fmt.format(n);
-const moneyOf = (r) => (Number(r.total) > 0 ? money(Number(r.total), r.currency) : "");
-const ymd = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-const WD = ["日", "一", "二", "三", "四", "五", "六"];
-function dayTitle(date) {
-  const [y, m, d] = date.split("-").map(Number);
-  const w = WD[new Date(y, m - 1, d).getDay()];
-  return `${y === new Date().getFullYear() ? "" : y + "年"}${m}月${d}日 周${w}`;
+async function call(body, { signal } = {}) {
+  let res;
+  try {
+    res = await fetch(API, { method: "POST", headers: { "content-type":"application/json", "x-passcode":passcode }, body: JSON.stringify(body), signal });
+  } catch (err) {
+    if (signal?.aborted || err.name === "AbortError") throw err;
+    throw new Error("网络不通，请稍后重试");
+  }
+  const json = await res.json().catch(() => ({}));
+  signal?.throwIfAborted();
+  if (res.status === 401) {
+    stopChat(); store.del("passcode"); passcode = ""; show();
+    throw new Error(json.error || "口令不对");
+  }
+  if (!res.ok) throw new Error(json.error || `出错了（${res.status}）`);
+  return json;
 }
-const monthTitle = (m) => `${m.slice(0, 4)}年${Number(m.slice(5))}月`;
-
-/* ---------- shell ---------- */
+const fmt = new Intl.NumberFormat("en-US", { minimumFractionDigits:2, maximumFractionDigits:2 });
+const SYM = { USD:"$", CNY:"¥", RMB:"¥", EUR:"€", GBP:"£" };
+const money = (n,c) => (SYM[(c || "USD").toUpperCase()] ?? c + " ") + fmt.format(n);
+const moneyOf = (r) => Number(r.total) > 0 ? money(Number(r.total),r.currency) : "";
+const ymd = (d) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+const WD = ["日","一","二","三","四","五","六"];
+function parseDate(text) {
+  let t = text.trim().replace(/年|月|\/|\./g,"-").replace(/日|号/g,"");
+  if (/^\d{8}$/.test(t)) t = `${t.slice(0,4)}-${t.slice(4,6)}-${t.slice(6)}`;
+  const short = /^(\d{1,2})-(\d{1,2})$/.exec(t);
+  if (short) {
+    let y = new Date().getFullYear();
+    const candidate = `${y}-${short[1].padStart(2,"0")}-${short[2].padStart(2,"0")}`;
+    if (candidate > ymd(new Date())) y--;
+    t = `${y}-${short[1]}-${short[2]}`;
+  }
+  const parts = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(t);
+  if (!parts || Number(parts[1]) === 0) return null;
+  const iso = `${parts[1]}-${parts[2].padStart(2,"0")}-${parts[3].padStart(2,"0")}`;
+  const date = new Date(iso + "T00:00:00Z");
+  return !isNaN(date) && date.toISOString().slice(0,10) === iso ? iso : null;
+}
+function dayTitle(date) {
+  const [y,m,d] = date.split("-").map(Number);
+  return `${y === new Date().getFullYear() ? "" : y + "年"}${m}月${d}日 周${WD[new Date(y,m-1,d).getDay()]}`;
+}
+const monthTitle = (m) => `${m.slice(0,4)}年${Number(m.slice(5))}月`;
+function notice(text, bad = false) {
+  $("notice").textContent = text;
+  $("notice").classList.toggle("bad",bad);
+  $("notice").classList.remove("hidden");
+}
 function show() {
-  $("login").classList.toggle("hidden", !!passcode);
-  $("app").classList.toggle("hidden", !passcode);
-  $("tabs").classList.toggle("hidden", !passcode);
-  if (!passcode) $("chatbar").classList.add("hidden");
+  $("login").classList.toggle("hidden",!!passcode);
+  $("app").classList.toggle("hidden",!passcode);
 }
 $("enter").onclick = async () => {
-  passcode = $("pass").value.trim();
-  $("loginError").textContent = "";
-  if (!passcode) return;
-  try { await call({ action: "ping" }); store.set("passcode", passcode); show(); }
-  catch (e) { $("loginError").textContent = e.message; passcode = ""; }
+  const candidate = $("pass").value.trim();
+  if (!candidate) return;
+  passcode = candidate; $("enter").disabled = true; $("loginError").textContent = "";
+  try {
+    await call({ action:"ping" }); store.set("passcode",passcode); $("pass").value = "";
+    show(); await openBrowse();
+  } catch (e) { passcode = ""; show(); $("loginError").textContent = e.message; }
+  finally { $("enter").disabled = false; }
 };
-$("pass").addEventListener("keydown", (e) => { if (e.key === "Enter") $("enter").click(); });
-
-const TITLES = { upload: "上传", chat: "对话", browse: "浏览" };
-function tab(name) {
-  if (!TITLES[name]) name = "upload";
-  for (const n of ["upload", "chat", "browse"]) $("pane" + n[0].toUpperCase() + n.slice(1)).classList.toggle("hidden", n !== name);
-  $("chatbar").classList.toggle("hidden", name !== "chat");
-  document.body.classList.toggle("chatting", name === "chat");
-  document.querySelectorAll("nav button").forEach((b) => b.classList.toggle("on", b.dataset.tab === name));
-  $("title").textContent = TITLES[name];
-  store.set("tab", name);
-  if (name === "browse") openBrowse();
-  scrollTo(0, 0);
-}
-document.querySelectorAll("nav button").forEach((b) => (b.onclick = () => tab(b.dataset.tab)));
-
-function lightbox(src) {
-  $("lightbox").querySelector("img").src = src;
-  $("lightbox").classList.remove("hidden");
-}
+$("pass").addEventListener("keydown",e => { if (e.key === "Enter" && !e.isComposing) $("enter").click(); });
+function lightbox(src) { $("lightbox").querySelector("img").src = src; $("lightbox").classList.remove("hidden"); }
 $("lightbox").onclick = () => $("lightbox").classList.add("hidden");
 
-/* ---------- receipt cards ---------- */
+/* Receipt cards */
 function itemsBlock(r) {
   if (!r.items?.length) return null;
-  const SHOW = 5;
-  const box = el("div", { class: "items" });
+  const box = el("div",{ class:"items" });
   const draw = (all) => {
-    box.replaceChildren(...(all ? r.items : r.items.slice(0, SHOW)).map((i) => el("div", { class: "item" },
-      el("span", {}, Number(i.quantity) > 1 ? `${i.name} ×${Number(i.quantity)}` : i.name),
-      el("span", { class: "num" }, Number(i.price) > 0 ? money(Number(i.price), r.currency) : ""))));
-    if (!all && r.items.length > SHOW) box.append(el("button", { class: "more", onclick: () => draw(true) }, `另外 ${r.items.length - SHOW} 项…`));
+    box.replaceChildren(...(all ? r.items : r.items.slice(0,5)).map(i => el("div",{ class:"item" },
+      el("span",{},Number(i.quantity)>1 ? `${i.name} ×${Number(i.quantity)}` : i.name),
+      el("span",{ class:"num" },Number(i.price)>0 ? money(Number(i.price),r.currency) : ""))));
+    if (!all && r.items.length>5) box.append(el("button",{ class:"more",onclick:()=>draw(true) },`另外 ${r.items.length-5} 项…`));
   };
-  draw(false);
-  return box;
+  draw(false); return box;
 }
-function card(r, { withDate = false } = {}) {
-  return el("div", { class: "card" },
-    el("div", { class: "top" },
-      el("div", {},
-        el("div", { class: "merchant" }, r.merchant || "未识别商家"),
-        withDate ? el("div", { class: "sub" }, dayTitle(r.date)) : null),
-      el("div", { class: "total num" }, moneyOf(r))),
-    itemsBlock(r),
-    r.view_url ? el("button", { class: "photo", onclick: () => lightbox(r.view_url) }, "查看小票照片 ›") : null);
+function card(r,{ editable = false } = {}) {
+  const node = el("div",{ class:"card receipt-card","data-receipt-id":r.id },
+    el("div",{ class:"top" },el("div",{},el("div",{ class:"merchant" },r.merchant || "未识别商家"),
+      el("div",{ class:"sub receipt-date" },r.date)),el("div",{ class:"total num" },moneyOf(r))),itemsBlock(r));
+  const actions = el("div",{ class:"actions" });
+  if (r.view_url) actions.append(el("button",{ onclick:()=>lightbox(r.view_url) },"查看原件"));
+  if (editable) actions.append(el("button",{ onclick:()=>editDate(r),"aria-label":`修改 ${r.merchant || "小票"} 的日期` },"修改日期"),
+    el("button",{ class:"delete",onclick:()=>confirmDelete(r),"aria-label":`从项目库删除 ${r.merchant || "小票"}` },"删除"));
+  if (actions.childNodes.length) node.append(actions);
+  return node;
 }
-function groupByDay(list) {
-  const out = [];
+function dayGroups(list,withHeader = true) {
+  const nodes = []; let date;
   for (const r of list) {
-    const last = out[out.length - 1];
-    if (last && last.date === r.date) last.rows.push(r); else out.push({ date: r.date, rows: [r] });
+    if (withHeader && r.date !== date) nodes.push(el("div",{ class:"day" },el("b",{},dayTitle(r.date))));
+    date = r.date; nodes.push(card(r,{ editable:true }));
   }
-  return out;
-}
-function dayGroups(list, withHeader = true) {
-  return groupByDay(list).flatMap((g) => [
-    withHeader ? el("div", { class: "day" }, el("b", {}, dayTitle(g.date))) : null,
-    ...g.rows.map((r) => card(r)),
-  ]).filter(Boolean);
+  return nodes;
 }
 
-/* ---------- upload ---------- */
-// Downscale to the same 2576px JPEG the Mac app sends, so reading quality matches.
+/* Receipt management */
+let editing = null, deleting = null, savingDate = false, deletingReceipt = false;
+function editDate(r) {
+  editing = r; $("dateMerchant").textContent = r.merchant || "未识别商家";
+  $("receiptDate").value = r.date; $("receiptCalendar").value = r.date; $("dateError").textContent = "";
+  $("dateDialog").showModal(); $("receiptDate").focus(); $("receiptDate").select();
+}
+$("receiptDate").oninput = () => {
+  $("dateError").textContent = "";
+  const date = parseDate($("receiptDate").value);
+  if (date) $("receiptCalendar").value = date;
+};
+$("receiptCalendar").onchange = () => {
+  if (parseDate($("receiptCalendar").value)) $("receiptDate").value = $("receiptCalendar").value;
+  $("dateError").textContent = "";
+};
+$("dateCancel").onclick = () => { if (!savingDate) $("dateDialog").close(); };
+$("dateDialog").addEventListener("cancel",e => { if (savingDate) e.preventDefault(); });
+$("dateForm").onsubmit = async e => {
+  e.preventDefault(); if (!editing || savingDate) return;
+  const date = parseDate($("receiptDate").value);
+  if (!date) { $("dateError").textContent = "请输入有效日期，例如 2026-10-08"; return; }
+  const r = editing;
+  savingDate = true; $("dateSave").disabled = true; $("dateCancel").disabled = true;
+  try {
+    await call({ action:"edit_receipt",id:r.id,date });
+    r.date = date;
+    document.querySelectorAll(".receipt-card").forEach(n => {
+      if (n.dataset.receiptId === r.id) n.querySelector(".receipt-date").textContent = date;
+    });
+    $("dateDialog").close(); notice("小票日期已更新");
+    await refreshLibrary({ day:date });
+  } catch (err) { $("dateError").textContent = err.message; }
+  finally { savingDate = false; $("dateSave").disabled = false; $("dateCancel").disabled = false; }
+};
+function confirmDelete(r) {
+  deleting = r; $("deleteMerchant").textContent = `${r.merchant || "未识别商家"} · ${r.date}`;
+  $("deleteError").textContent = ""; $("deleteDialog").showModal(); $("deleteCancel").focus();
+}
+$("deleteCancel").onclick = () => { if (!deletingReceipt) $("deleteDialog").close(); };
+$("deleteDialog").addEventListener("cancel",e => { if (deletingReceipt) e.preventDefault(); });
+$("deleteForm").onsubmit = async e => {
+  e.preventDefault(); if (!deleting || deletingReceipt) return;
+  const r = deleting;
+  deletingReceipt = true; $("deleteSave").disabled = true; $("deleteCancel").disabled = true;
+  try {
+    await call({ action:"delete_receipt",id:r.id });
+    document.querySelectorAll(".receipt-card").forEach(n => { if (n.dataset.receiptId === r.id) n.remove(); });
+    $("deleteDialog").close(); notice("已从项目库删除，PDF 源文件已保留");
+    await refreshLibrary();
+  } catch (err) { $("deleteError").textContent = err.message; }
+  finally { deletingReceipt = false; $("deleteSave").disabled = false; $("deleteCancel").disabled = false; }
+};
+
+/* Chat cancellation also guards against responses that arrive after the next question. */
+let turns = [], activeChat = null;
+const loadHistory = () => { try { const v=JSON.parse(store.get("history") || "[]"); return Array.isArray(v) ? v.filter(x=>typeof x === "string").slice(0,10) : []; } catch { return []; } };
+function drawHistory() {
+  const list = loadHistory(); $("historyBox").classList.toggle("hidden",!list.length);
+  $("history").replaceChildren(...list.map(q=>el("button",{ class:"chip",onclick:()=>ask(q) },q)));
+}
+function remember(q) { store.set("history",JSON.stringify([q,...loadHistory().filter(h=>h!==q)].slice(0,10))); drawHistory(); }
+function toEnd() { $("chatScroll").scrollTo({ top:$("chatScroll").scrollHeight,behavior:"smooth" }); }
+function setChatBusy() {
+  const busy = !!activeChat;
+  $("go").textContent = busy ? "停止" : "发送"; $("go").classList.toggle("stopping",busy);
+  $("go").setAttribute("aria-label",busy ? "停止回答" : "发送问题");
+  $("go").disabled = !busy && !$("q").value.trim();
+  $("newChat").disabled = busy || !$("chatLog").childNodes.length;
+}
+function replyBlock(r) {
+  const box = el("div",{ class:"reply" },el("div",{ class:"bubble ai" },r.answer));
+  if (r.scope) box.append(el("div",{ class:"scope" },r.scope));
+  const list = r.results || [];
+  const draw = (all) => {
+    box.querySelectorAll(".card,.more").forEach(n=>n.remove());
+    for (const x of all ? list : list.slice(0,5)) box.append(card(x));
+    if (!all && list.length>5) box.append(el("button",{ class:"more",onclick:()=>draw(true) },`显示全部 ${list.length} 张`));
+  };
+  draw(false); return box;
+}
+async function ask(text) {
+  const q = (text ?? $("q").value).trim();
+  if (!q || activeChat) return;
+  if (q.length>500) { notice("问题不能超过 500 个字",true); return; }
+  const request = { controller:new AbortController(),wait:el("div",{ class:"bubble ai muted" },el("span",{ class:"spin" }),"正在翻小票…") };
+  activeChat = request; $("q").value = ""; $("chatEmpty").classList.add("hidden");
+  $("chatLog").append(el("div",{ class:"bubble me" },q),request.wait); setChatBusy(); toEnd();
+  try {
+    const r = await call({ action:"chat",q,history:turns.slice() },{ signal:request.controller.signal });
+    if (activeChat !== request || request.controller.signal.aborted) return;
+    request.wait.replaceWith(replyBlock(r)); turns = [...turns,{ q,a:r.answer }].slice(-6);
+    if (r.onTopic) remember(q);
+  } catch (err) {
+    if (activeChat !== request || request.controller.signal.aborted) return;
+    request.wait.className = "bubble ai bad"; request.wait.replaceChildren(err.message);
+  } finally {
+    if (activeChat === request) { activeChat = null; setChatBusy(); toEnd(); }
+  }
+}
+function stopChat() {
+  const request = activeChat; if (!request) return;
+  activeChat = null; request.controller.abort();
+  request.wait.className = "bubble ai muted"; request.wait.replaceChildren("已停止");
+  setChatBusy(); toEnd();
+}
+$("chatForm").onsubmit = e => { e.preventDefault(); if (activeChat) stopChat(); else ask(); };
+$("q").addEventListener("keydown",e => {
+  if (e.key === "Enter" && (e.isComposing || activeChat)) e.preventDefault();
+});
+$("q").oninput = setChatBusy;
+$("newChat").onclick = () => {
+  if (activeChat) return;
+  turns = []; $("chatLog").replaceChildren(); $("chatEmpty").classList.remove("hidden"); setChatBusy();
+};
+document.querySelectorAll("[data-question]").forEach(b=>b.onclick=()=>ask(b.dataset.question));
+document.addEventListener("keydown",e => {
+  if (e.key === "Escape" && activeChat && !document.querySelector("dialog[open]")) { e.preventDefault(); stopChat(); }
+});
+
+/* Browsing: request generations prevent a slow old month from overwriting a new selection. */
+let months = null, cache = {}, selMonth = null, selDay = null, calOpen = false, browseEpoch = 0, libraryVersion = 0;
+async function openBrowse() {
+  const epoch = ++browseEpoch, version = libraryVersion;
+  $("browseList").setAttribute("aria-busy","true");
+  $("browseList").replaceChildren(el("div",{ class:"empty" },el("span",{ class:"spin" }),"加载中…"));
+  try {
+    const r = await call({ action:"months" });
+    if (epoch !== browseEpoch || version !== libraryVersion || !passcode) return;
+    months = r.months || [];
+    $("libraryCount").textContent = `${months.reduce((n,m)=>n+m.count,0)} 张小票`;
+    selMonth ||= months[0]?.month || ymd(new Date()).slice(0,7);
+    await pickMonth(selMonth,selDay);
+  } catch (err) {
+    if (epoch === browseEpoch) {
+      $("browseList").replaceChildren(el("p",{ class:"bad" },err.message));
+      $("browseList").setAttribute("aria-busy","false");
+    }
+  }
+}
+async function refreshLibrary({ day } = {}) {
+  libraryVersion++; browseEpoch++; cache = {}; months = null;
+  if (day) { selMonth = day.slice(0,7); selDay = day; }
+  await openBrowse();
+}
+async function pickMonth(month,day = null) {
+  const epoch = ++browseEpoch, version = libraryVersion;
+  selMonth = month; selDay = day; drawMonths(); drawCalendar();
+  $("browseList").setAttribute("aria-busy","true");
+  if (!cache[month]) {
+    $("browseList").replaceChildren(el("div",{ class:"empty" },el("span",{ class:"spin" }),"加载中…"));
+    try {
+      const r = await call({ action:"list",month });
+      if (version !== libraryVersion) return;
+      cache[month] = r.results || [];
+    } catch (err) {
+      if (epoch === browseEpoch) {
+        $("browseList").replaceChildren(el("p",{ class:"bad" },err.message));
+        $("browseList").setAttribute("aria-busy","false");
+      }
+      return;
+    }
+  }
+  if (epoch !== browseEpoch || !passcode) return;
+  drawList(); drawCalendar(); $("browseList").setAttribute("aria-busy","false");
+}
+function drawMonths() {
+  const list = (months || []).slice();
+  if (selMonth && !list.some(m=>m.month === selMonth)) list.push({ month:selMonth,count:0 });
+  list.sort((a,b)=>b.month.localeCompare(a.month));
+  $("months").replaceChildren(...list.map(m=>el("button",{ class:m.month === selMonth ? "on" : "",onclick:()=>pickMonth(m.month) },monthTitle(m.month),el("small",{ class:"num" },String(m.count)))));
+}
+function drawList() {
+  const all = cache[selMonth] || [];
+  const list = selDay ? all.filter(r=>r.date === selDay) : all;
+  $("browseSummary").replaceChildren(el("b",{},selDay ? dayTitle(selDay) : monthTitle(selMonth)),el("span",{ class:"muted num" },`${list.length} 张`));
+  if (selDay) $("browseSummary").append(el("button",{ class:"more",onclick:()=>pickMonth(selMonth) },"整月"));
+  $("browseList").replaceChildren(...(list.length ? dayGroups(list,!selDay) : [el("div",{ class:"empty" },selDay ? "这一天没有小票" : "这个月没有小票")]));
+}
+function drawCalendar() {
+  $("calToggle").classList.toggle("on",calOpen); $("calToggle").setAttribute("aria-expanded",String(calOpen));
+  $("cal").classList.toggle("hidden",!calOpen); if (!calOpen || !selMonth) return;
+  const [y,m] = selMonth.split("-").map(Number), first = new Date(y,m-1,1).getDay(), count = new Date(y,m,0).getDate();
+  const has = new Set((cache[selMonth] || []).map(r=>Number(r.date.slice(8)))), today = ymd(new Date());
+  const cells = WD.map(w=>el("div",{ class:"wd" },w));
+  for (let i=0;i<first;i++) cells.push(el("div"));
+  for (let d=1;d<=count;d++) {
+    const key = `${selMonth}-${String(d).padStart(2,"0")}`;
+    cells.push(el("button",{ class:[has.has(d)?"has":"",key===selDay?"sel":"",key===today?"today":""].join(" "),"aria-label":key,onclick:()=>pickMonth(selMonth,key) },String(d)));
+  }
+  $("cal").replaceChildren(el("div",{ class:"grid" },...cells));
+}
+$("calToggle").onclick = () => { calOpen = !calOpen; drawCalendar(); };
+$("jumpForm").onsubmit = async e => {
+  e.preventDefault(); const day = parseDate($("jump").value);
+  if (!day) { notice("请输入有效日期，例如 2026-10-08",true); return; }
+  calOpen = true; await pickMonth(day.slice(0,7),day); $("jump").value = "";
+};
+$("refresh").onclick = () => { $("notice").classList.add("hidden"); refreshLibrary(); };
 async function prepare(file) {
   const bmp = await createImageBitmap(file, { imageOrientation: "from-image" });
   const scale = Math.min(1, 2576 / Math.max(bmp.width, bmp.height));
@@ -351,169 +599,23 @@ async function prepare(file) {
   let bin = ""; for (let i = 0; i < buf.length; i += 0x8000) bin += String.fromCharCode(...buf.subarray(i, i + 0x8000));
   return btoa(bin);
 }
-$("file").onchange = async (e) => {
+$("file").onchange = async e => {
   const files = [...e.target.files]; e.target.value = "";
-  for (const f of files) {
-    const box = el("div", { class: "card" }, el("span", { class: "muted" }, el("span", { class: "spin" }), "识别中…"));
+  for (const file of files) {
+    const box = el("div",{ class:"card" },el("span",{ class:"muted" },el("span",{ class:"spin" }),"识别中…"));
     $("uploads").prepend(box);
     try {
-      const image = await prepare(f);
-      const r = await call({ action: "upload", image, fallbackDate: ymd(new Date(f.lastModified || Date.now())) });
-      box.replaceChildren(...renderUpload(r));
-      months = null; // browse needs a refresh
-    } catch (err) {
-      box.replaceChildren(el("span", { class: "bad" }, err.message));
-    }
+      const image = await prepare(file);
+      const r = await call({ action:"upload",image,fallbackDate:ymd(new Date(file.lastModified || Date.now())) });
+      if (!r.ok) { box.replaceChildren(el("div",{},r.note || "没有识别到小票")); continue; }
+      box.replaceChildren(el("div",{ class:"good" },"已上传"),el("div",{ class:"sub" },(r.receipts || []).map(x=>x.merchant).filter(Boolean).join("、") || "小票"),
+        el("button",{ class:"more",onclick:()=>pickMonth(r.date.slice(0,7),r.date) },`查看 ${r.date} 的小票`));
+      await refreshLibrary({ day:r.date });
+    } catch (err) { box.replaceChildren(el("span",{ class:"bad" },err.message)); }
   }
 };
-function renderUpload(r) {
-  if (!r.ok) return [el("div", { class: "merchant" }, "没有识别到小票"), el("div", { class: "sub" }, r.note || "")];
-  const names = r.receipts.map((x) => x.merchant).filter(Boolean).join("、") || "小票";
-  const date = el("input", { type: "date", value: r.date });
-  date.onchange = async () => {
-    try { await call({ action: "set_date", file: r.file, date: date.value }); date.style.borderColor = ""; }
-    catch (err) { date.style.borderColor = "var(--bad)"; alert(err.message); }
-  };
-  return [
-    el("div", { class: "top" }, el("div", { class: "merchant" }, names), el("div", { class: "good" }, "✓ 已上传")),
-    ...r.receipts.map((x) => el("div", { class: "sub num" }, `${x.merchant || ""} ${moneyOf(x)} · ${x.items.length} 项`)),
-    el("div", { class: "datefix" }, el("label", {}, r.dateFromPhoto ? "日期（来自小票）" : "日期（按拍摄时间）"), date),
-  ];
-}
+drawHistory(); show(); if (passcode) openBrowse();
 
-/* ---------- chat ---------- */
-let turns = [], asking = false;
-const SHOWN = 5;
-const loadHistory = () => { try { return JSON.parse(store.get("history") || "[]"); } catch { return []; } };
-function remember(q) {
-  store.set("history", JSON.stringify([q, ...loadHistory().filter((h) => h !== q)].slice(0, 10)));
-  drawHistory();
-}
-function drawHistory() {
-  const list = loadHistory();
-  $("historyBox").classList.toggle("hidden", !list.length);
-  $("history").replaceChildren(...list.map((h) => el("button", { class: "chip", onclick: () => ask(h) }, h)));
-}
-const toEnd = () => scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
-
-function replyBlock(r) {
-  const box = el("div", { class: "reply" }, el("div", { class: "bubble ai" }, r.answer));
-  if (r.scope) box.append(el("div", { class: "scope" }, r.scope));
-  const list = r.results || [];
-  const draw = (all) => {
-    box.querySelectorAll(".card, .more").forEach((n) => n.remove());
-    for (const x of all ? list : list.slice(0, SHOWN)) box.append(card(x, { withDate: true }));
-    if (!all && list.length > SHOWN) box.append(el("button", { class: "more", onclick: () => draw(true) }, `显示全部 ${list.length} 张`));
-  };
-  draw(false);
-  return box;
-}
-
-async function ask(text) {
-  const q = (text ?? $("q").value).trim();
-  if (!q || asking) return;
-  asking = true; $("go").disabled = true; $("q").value = "";
-  $("chatEmpty").classList.add("hidden"); $("newChat").classList.remove("hidden");
-  $("chatLog").append(el("div", { class: "bubble me" }, q));
-  const wait = el("div", { class: "bubble ai muted" }, el("span", { class: "spin" }), "正在翻小票…");
-  $("chatLog").append(wait); toEnd();
-  try {
-    const r = await call({ action: "chat", q, history: turns });
-    wait.replaceWith(replyBlock(r));
-    turns = [...turns, { q, a: r.answer }].slice(-6);
-    if (r.onTopic) remember(q);
-  } catch (err) {
-    wait.className = "bubble ai bad"; wait.replaceChildren(err.message);
-  } finally { asking = false; $("go").disabled = false; toEnd(); }
-}
-function newChat() {
-  if (asking) return;
-  turns = []; $("chatLog").replaceChildren();
-  $("chatEmpty").classList.remove("hidden"); $("newChat").classList.add("hidden");
-}
-$("go").onclick = () => ask();
-$("newChat").onclick = newChat;
-$("q").addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.isComposing) ask(); });
-drawHistory();
-
-/* ---------- browse ---------- */
-let months = null, cache = {}, selMonth = null, selDay = null, calOpen = false;
-
-async function openBrowse() {
-  if (!months) {
-    $("browseList").replaceChildren(el("div", { class: "empty" }, el("span", { class: "spin" }), "加载中…"));
-    try {
-      months = (await call({ action: "months" })).months; cache = {};
-    } catch (err) { $("browseList").replaceChildren(el("p", { class: "bad" }, err.message)); return; }
-  }
-  if (!months.length) { $("browseList").replaceChildren(el("div", { class: "empty" }, "还没有小票")); $("months").replaceChildren(); return; }
-  if (!selMonth || !months.some((m) => m.month === selMonth)) selMonth = months[0].month;
-  await pickMonth(selMonth, selDay);
-}
-
-async function pickMonth(m, day = null) {
-  selMonth = m; selDay = day;
-  drawMonths(); drawCalendar();
-  if (!cache[m]) {
-    $("browseList").replaceChildren(el("div", { class: "empty" }, el("span", { class: "spin" }), "加载中…"));
-    try { cache[m] = (await call({ action: "list", month: m })).results; }
-    catch (err) { $("browseList").replaceChildren(el("p", { class: "bad" }, err.message)); return; }
-  }
-  drawList(); drawCalendar();
-}
-
-function drawMonths() {
-  const bar = $("months");
-  bar.replaceChildren(...months.map((m) => el("button", { class: m.month === selMonth ? "on" : "", onclick: () => pickMonth(m.month) },
-    monthTitle(m.month), el("small", { class: "num" }, String(m.count)))));
-  bar.querySelector(".on")?.scrollIntoView({ inline: "center", block: "nearest" });
-}
-
-function drawList() {
-  const all = cache[selMonth] || [];
-  const list = selDay ? all.filter((r) => r.date === selDay) : all;
-  $("browseSummary").replaceChildren(
-    el("b", {}, selDay ? dayTitle(selDay) : monthTitle(selMonth)),
-    el("span", { class: "muted num" }, `${list.length} 张`),
-  );
-  if (selDay) $("browseSummary").append(el("button", { class: "more", onclick: () => pickMonth(selMonth) }, "整月"));
-  $("browseList").replaceChildren(...(list.length ? dayGroups(list, !selDay) : [el("div", { class: "empty" }, "这一天没有小票")]));
-}
-
-function drawCalendar() {
-  $("calToggle").classList.toggle("on", calOpen);
-  $("cal").classList.toggle("hidden", !calOpen);
-  if (!calOpen) return;
-  const [y, m] = selMonth.split("-").map(Number);
-  const first = new Date(y, m - 1, 1).getDay();
-  const count = new Date(y, m, 0).getDate();
-  const has = new Set((cache[selMonth] || []).map((r) => Number(r.date.slice(8))));
-  const today = ymd(new Date());
-  const cells = WD.map((w) => el("div", { class: "wd" }, w));
-  for (let i = 0; i < first; i++) cells.push(el("div"));
-  for (let d = 1; d <= count; d++) {
-    const key = `${selMonth}-${String(d).padStart(2, "0")}`;
-    cells.push(el("button", {
-      class: [has.has(d) ? "has" : "", key === selDay ? "sel" : "", key === today ? "today" : ""].join(" "),
-      onclick: () => pickMonth(selMonth, key),
-    }, String(d)));
-  }
-  $("cal").replaceChildren(el("div", { class: "grid" }, ...cells));
-}
-
-$("calToggle").onclick = () => { calOpen = !calOpen; drawCalendar(); };
-$("jump").onchange = async (e) => {
-  const v = e.target.value; if (!v) return;
-  calOpen = true;
-  if (!months.some((m) => m.month === v.slice(0, 7))) {
-    months = [...months, { month: v.slice(0, 7), count: 0 }].sort((a, b) => b.month.localeCompare(a.month));
-  }
-  await pickMonth(v.slice(0, 7), v);
-  e.target.value = "";
-};
-
-show();
-if (passcode) tab(store.get("tab") || "upload");
 </script>
 </body>
 </html>
