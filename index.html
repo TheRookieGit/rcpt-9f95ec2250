@@ -280,6 +280,30 @@
     body[data-tab="budget"] #paneBudget, body[data-tab="more"] #paneMore { display: flex; grid-column: 2; grid-row: 1; }
     .center-scroll { flex: 1; min-height: 0; }
   }
+  /* Desktop: every pane at once, in the Mac app's column order, no tabs. */
+  @media (min-width: 1360px) {
+    main { max-width: none; height: 100dvh; display: flex; flex-direction: column; padding: 0 14px 14px; }
+    #app { flex: 1; min-height: 0; }
+    .app-head { padding: 14px 4px; }
+    #app .tabs { display: none; }
+    .workspace {
+      flex: 1; min-height: 0; height: auto; gap: 10px;
+      grid-template-columns: minmax(220px,260px) minmax(280px,1fr) minmax(250px,360px) minmax(250px,360px) minmax(290px,400px);
+      grid-template-rows: minmax(0,1fr) minmax(0,1fr);
+    }
+    body[data-tab] #paneUpload { display: flex; grid-column: 1; grid-row: 1; }
+    body[data-tab] #paneMore { display: flex; grid-column: 1; grid-row: 2; }
+    body[data-tab] #paneBrowse { display: flex; grid-column: 2; grid-row: 1 / 3; }
+    body[data-tab] #paneTx { display: flex; grid-column: 3; grid-row: 1 / 3; }
+    body[data-tab] #paneShare { display: flex; grid-column: 4; grid-row: 1; }
+    body[data-tab] #paneBudget { display: flex; grid-column: 4; grid-row: 2; }
+    body[data-tab] #paneChat { display: flex; grid-column: 5; grid-row: 1 / 3; }
+    .panel { padding: 14px; }
+    #uploads { flex: 1; min-height: 0; }
+    /* The assistant reads apart from the data columns, as on the Mac. */
+    #paneChat { background: var(--surface-2); box-shadow: 0 2px 6px rgba(0, 0, 0, .08), 0 12px 32px rgba(0, 0, 0, .12); }
+    #paneChat .bubble.ai, #paneChat .chip, #paneChat input[type=text] { background: var(--surface); }
+  }
 </style>
 </head>
 <body>
@@ -734,6 +758,7 @@ $("file").onchange = async e => {
 /* Tabs: on a phone every section is a tab; wide screens keep archive and chat beside the selected tab. */
 const TABS = ["upload","browse","tx","share","budget","chat","more"];
 const wideQuery = typeof window.matchMedia === "function" ? window.matchMedia("(min-width: 1000px)") : null;
+const deskQuery = typeof window.matchMedia === "function" ? window.matchMedia("(min-width: 1360px)") : null;
 const loaded = {};
 let tab = null;
 function setTab(name, { remember = true } = {}) {
@@ -744,7 +769,10 @@ function setTab(name, { remember = true } = {}) {
     const on = b.dataset.tab === name; b.setAttribute("aria-selected",String(on)); b.classList.toggle("on",on);
   });
   if (remember) store.set("tab",name);
-  if (passcode) ensureLoaded(name);
+  if (!passcode) return;
+  ensureLoaded(name);
+  // The desktop layout shows every pane, so each loads up front.
+  if (deskQuery?.matches) ["tx","share","more"].forEach(ensureLoaded);
 }
 function ensureLoaded(name) {
   if (loaded[name]) return;
@@ -754,6 +782,7 @@ function ensureLoaded(name) {
 }
 document.querySelectorAll("#tabs button").forEach(b => b.onclick = () => setTab(b.dataset.tab));
 wideQuery?.addEventListener?.("change", () => setTab(tab));
+deskQuery?.addEventListener?.("change", () => setTab(tab));
 
 /* Shared helpers for the read-only panes */
 const usd = (n) => (n < 0 ? "-" : "") + "$" + fmt.format(Math.abs(n));
