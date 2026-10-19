@@ -106,15 +106,6 @@
   .months small { opacity: .7; font-weight: 500; margin-left: 4px; }
   .summary { display: flex; justify-content: space-between; align-items: baseline; margin: 4px 4px 10px; }
   .summary b { font-size: 20px; }
-  .cal { background: var(--surface); border-radius: 18px; padding: 12px; border: 1px solid var(--line); box-shadow: var(--shadow); margin-bottom: 6px; }
-  .cal .grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; text-align: center; }
-  .cal .wd { font-size: 11px; color: var(--faint); padding: 4px 0; }
-  .cal button { aspect-ratio: 1; border-radius: 12px; font-size: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; color: var(--faint); }
-  .cal button.has { color: var(--text); font-weight: 600; }
-  .cal button.has::after { content: ""; width: 4px; height: 4px; border-radius: 50%; background: var(--accent); }
-  .cal button.sel { background: var(--accent); color: var(--on-accent); }
-  .cal button.sel::after { background: var(--on-accent); }
-  .cal button.today { box-shadow: inset 0 0 0 1.5px var(--accent); }
   .tools { display: flex; gap: 8px; align-items: center; margin: 0 0 6px; }
   .tools .pill { display: flex; align-items: center; gap: 6px; padding: 9px 14px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); font-size: 14px; font-weight: 600; }
   .tools .pill.on { color: var(--accent); }
@@ -155,8 +146,6 @@
   .tools { flex-wrap: wrap; margin-bottom: 12px; }
   .tools input[type=text] { flex: 1; width: 110px; font-size: 16px; }
   .tools form { display: flex; flex: 1; gap: 4px; }
-  .cal { box-shadow: none; margin-bottom: 12px; }
-  .cal .grid button { min-height: 32px; aspect-ratio: auto; padding: 5px; }
   .summary { gap: 8px; flex-wrap: wrap; margin: 8px 0 12px; }
   .summary b { font-size: 17px; }
   .card .actions { display: flex; align-items: center; gap: 6px; margin: 10px -5px -6px; }
@@ -280,6 +269,99 @@
     body[data-tab="budget"] #paneBudget, body[data-tab="more"] #paneMore { display: flex; grid-column: 2; grid-row: 1; }
     .center-scroll { flex: 1; min-height: 0; }
   }
+  /* Calendar, as on the Mac: one month always shown; the title opens a year of months; jump-to-date below. */
+  .calbox { display: grid; gap: 10px; margin-bottom: 12px; }
+  .cal-head { display: flex; align-items: center; gap: 2px; position: relative; }
+  .cal-head .grow { flex: 1; }
+  .month-btn { flex: none; white-space: nowrap; display: flex; align-items: center; gap: 5px; padding: 5px 8px; border-radius: 8px; font-size: 15px; font-weight: 650; }
+  .month-btn svg { width: 10px; height: 10px; fill: none; stroke: var(--muted); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+  .month-btn[aria-expanded="true"] { background: var(--surface-2); }
+  .icon-btn { flex: none; display: grid; place-items: center; width: 32px; height: 32px; border-radius: 8px; color: var(--muted); font-size: 19px; line-height: 1; }
+  .today-btn { flex: none; white-space: nowrap; padding: 5px 11px; border-radius: 8px; background: var(--surface-2); font-size: 13px; font-weight: 600; }
+  @media (hover: hover) {
+    .month-btn:hover, .icon-btn:hover:not(:disabled) { background: var(--surface-2); }
+    .today-btn:hover { color: var(--accent); }
+  }
+  .cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px 0; }
+  .cal .wd { font-size: 11px; color: var(--faint); text-align: center; padding: 2px 0; }
+  .cal button {
+    min-height: 36px; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+    font-size: 14px; font-variant-numeric: tabular-nums; color: var(--faint);
+  }
+  .cal button::after { content: ""; width: 4px; height: 4px; border-radius: 50%; }
+  .cal button.has { color: var(--text); }
+  .cal button.has::after { background: var(--accent); }
+  .cal button.today { font-weight: 700; box-shadow: inset 0 0 0 1px var(--accent); }
+  .cal button.sel { background: var(--accent); color: var(--on-accent); box-shadow: none; }
+  .cal button.sel::after { background: var(--on-accent); }
+  @media (hover: hover) { .cal button:not(.sel):hover { background: var(--surface-2); } }
+  .mpick {
+    position: absolute; top: calc(100% + 6px); left: 0; z-index: 30; width: 268px; padding: 14px; border-radius: 14px;
+    background: var(--surface); border: 1px solid var(--line); box-shadow: 0 14px 44px rgba(0, 0, 0, .28);
+  }
+  .mpick .yr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; text-align: center; }
+  .mpick .yr b { display: block; font-size: 15px; }
+  .mpick .yr small { color: var(--muted); font-size: 12px; }
+  .mpick .icon-btn:disabled { opacity: .3; }
+  .mpick .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .mpick .grid button {
+    min-height: 46px; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+    font-size: 13px; font-weight: 500; background: color-mix(in srgb, var(--text) 6%, transparent);
+  }
+  .mpick .grid button small { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .mpick .grid button.none { background: color-mix(in srgb, var(--text) 2.5%, transparent); color: var(--muted); }
+  .mpick .grid button.none small { opacity: .5; }
+  .mpick .grid button.on { background: var(--accent); color: var(--on-accent); font-weight: 650; }
+  .mpick .grid button.on small { color: var(--on-accent); opacity: .85; }
+  .jump { display: flex; align-items: center; gap: 8px; padding: 0 4px 0 11px; border-radius: 10px; border: 1px solid transparent; background: color-mix(in srgb, var(--text) 4.5%, transparent); }
+  .jump svg { width: 15px; height: 15px; flex: none; fill: none; stroke: var(--faint); stroke-width: 2; stroke-linecap: round; }
+  .jump input[type=text] { border: 0; background: transparent; padding: 8px 0; min-height: 40px; font-size: 16px; }
+  .jump input[type=text]:focus { box-shadow: none; }
+  .jump.err { border-color: #f59e0b; }
+  .jump-error { color: #f59e0b; font-size: 12px; margin: -4px 2px 0; }
+  .pane-sub { color: var(--muted); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  #paneBrowse .panel-head h2 { flex: none; }
+  #paneBrowse .panel-head .pane-sub { flex: 1; }
+
+  /* Receipts drawn like the paper they came from, as on the Mac: monospaced print, a dashed rule, dotted leaders,
+     the first three items, and a torn bottom edge. A tap shows every item. */
+  :root { --paper: #fffdf6; --desk: #ecebe8; --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, "PingFang SC", monospace; }
+  @media (prefers-color-scheme: dark) { :root { --paper: #3c3c3e; --desk: #1f1f21; } }
+  #paneBrowse { background: var(--desk); }
+  #paneBrowse .day { position: sticky; top: 0; z-index: 1; background: var(--desk); margin: 0; padding: 12px 2px 6px; }
+  #paneBrowse .day b { font-size: 12.5px; font-weight: 600; color: var(--muted); }
+  .slip { margin: 0 0 10px; filter: drop-shadow(0 1.5px 1.5px rgba(0, 0, 0, .1)); transition: filter .12s ease-out; }
+  .paper {
+    background: var(--paper); padding: 12px 14px 18px; border-radius: 3px 3px 0 0; font-family: var(--mono); color: var(--text);
+    -webkit-mask: linear-gradient(#000 0 0) top / 100% calc(100% - 3.5px) no-repeat, conic-gradient(from -45deg at bottom, #000 90deg, #0000 0) bottom / 7px 3.5px repeat-x;
+    mask: linear-gradient(#000 0 0) top / 100% calc(100% - 3.5px) no-repeat, conic-gradient(from -45deg at bottom, #000 90deg, #0000 0) bottom / 7px 3.5px repeat-x;
+  }
+  .paper.expandable { cursor: pointer; }
+  .paper .r-top { display: flex; align-items: baseline; gap: 10px; }
+  .paper .merchant { flex: 1; min-width: 0; font-size: 14px; font-weight: 700; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .paper .total { font-size: 14px; font-weight: 700; white-space: nowrap; }
+  .paper .r-sub { display: flex; align-items: center; gap: 6px; min-height: 26px; margin-top: 1px; }
+  .paper .receipt-date { flex: 1; font-size: 11.5px; color: var(--muted); }
+  .paper .rule { border: 0; border-top: 1px dashed color-mix(in srgb, var(--muted) 55%, transparent); margin: 6px 0 7px; }
+  .paper .r-items { display: grid; grid-template-columns: minmax(0, 1fr); gap: 3px; font-size: 12px; color: var(--muted); }
+  .paper .r-item { display: flex; align-items: baseline; gap: 4px; }
+  .paper .r-item .n { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  .paper .r-item .lead { flex: 1; min-width: 8px; height: 0; border-bottom: 1.5px dotted color-mix(in srgb, var(--muted) 45%, transparent); }
+  .paper .r-item .p { white-space: nowrap; }
+  .paper .r-more { color: var(--faint); }
+  .r-acts { display: flex; gap: 2px; }
+  .r-acts button { display: grid; place-items: center; width: 30px; height: 26px; border-radius: 7px; color: var(--muted); }
+  .r-acts button svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+  .r-acts button.delete:hover { color: var(--bad); }
+  @media (hover: hover) {
+    .slip:hover { filter: drop-shadow(0 2px 4px rgba(0, 0, 0, .17)); }
+    .r-acts { opacity: 0; transition: opacity .12s; }
+    .slip:hover .r-acts, .slip:focus-within .r-acts { opacity: 1; }
+    .r-acts button:hover { background: color-mix(in srgb, var(--text) 8%, transparent); color: var(--text); }
+  }
+  .reply .slip { margin: 0; }
+  .d-only { display: none !important; }
+
   /* Desktop: every pane at once, in the Mac app's column order, no tabs. */
   @media (min-width: 1360px) {
     main { max-width: none; height: 100dvh; display: flex; flex-direction: column; padding: 0 14px 14px; }
@@ -291,8 +373,18 @@
       grid-template-columns: minmax(220px,260px) minmax(280px,1fr) minmax(250px,360px) minmax(250px,360px) minmax(290px,400px);
       grid-template-rows: minmax(0,1fr) minmax(0,1fr);
     }
-    body[data-tab] #paneUpload { display: flex; grid-column: 1; grid-row: 1; }
-    body[data-tab] #paneMore { display: flex; grid-column: 1; grid-row: 2; }
+    body[data-tab] #paneUpload { display: flex; grid-column: 1; grid-row: 1 / 3; }
+    /* The Mac opens reconcile from its toolbar; here the header button opens it over the workspace. */
+    body[data-tab] #paneMore { display: none; }
+    body[data-tab][data-more] #paneMore {
+      display: flex; position: fixed; z-index: 40; top: 64px; right: 24px; width: min(520px, calc(100vw - 48px)); max-height: calc(100dvh - 88px);
+      box-shadow: 0 0 0 100vmax rgba(0, 0, 0, .35), 0 20px 60px rgba(0, 0, 0, .3);
+    }
+    .d-only { display: inline-flex !important; align-items: center; }
+    #paneUpload .calbox { margin: 12px -14px -14px; padding: 14px 10px; border-top: 1px solid var(--line); }
+    #paneUpload .icon-btn { width: 28px; }
+    #paneUpload .month-btn { padding: 5px 6px; }
+    #paneUpload .hint { margin-top: 10px; }
     body[data-tab] #paneBrowse { display: flex; grid-column: 2; grid-row: 1 / 3; }
     body[data-tab] #paneTx { display: flex; grid-column: 3; grid-row: 1 / 3; }
     body[data-tab] #paneShare { display: flex; grid-column: 4; grid-row: 1; }
@@ -323,6 +415,7 @@
     <header class="app-head">
       <h1>小票工作台</h1>
       <span id="libraryCount" class="badge num">小票库</span>
+      <button id="moreBtn" class="quiet d-only" type="button" aria-controls="paneMore" aria-expanded="false">对账与规则</button>
       <button id="refresh" class="quiet" type="button">刷新</button>
     </header>
     <div id="notice" class="hidden" role="status" aria-live="polite"></div>
@@ -339,14 +432,20 @@
         <p class="hint">照片将在 Mac 下次同步时归档为 PDF。</p>
       </section>
       <section id="paneBrowse" class="panel" aria-labelledby="browseTitle">
-        <div class="panel-head"><span class="mark" aria-hidden="true">▦</span><h2 id="browseTitle">小票库</h2></div>
-        <div id="months" class="months" aria-label="月份"></div>
-        <div class="tools">
-          <button class="pill" id="calToggle" type="button" aria-expanded="false" aria-controls="cal">日历</button>
-          <form id="jumpForm"><input id="jump" type="text" inputmode="numeric" placeholder="跳到日期，如 10-8" aria-label="跳到日期" autocomplete="off"><button class="quiet" type="submit">查找</button></form>
+        <div class="panel-head"><span class="mark" aria-hidden="true">▦</span><h2 id="browseTitle">小票库</h2><span id="browseSummary" class="pane-sub num"></span><button class="quiet hidden" id="wholeMonth" type="button">整月</button></div>
+        <div id="calBox" class="calbox">
+          <div class="cal-head">
+            <button id="monthBtn" class="month-btn" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="monthPicker"><span id="calTitle"></span><svg viewBox="0 0 10 10" aria-hidden="true"><path d="m2 3.5 3 3 3-3"/></svg></button>
+            <span class="grow"></span>
+            <button id="calPrev" class="icon-btn" type="button" aria-label="上个月">‹</button>
+            <button id="calToday" class="today-btn" type="button">今天</button>
+            <button id="calNext" class="icon-btn" type="button" aria-label="下个月">›</button>
+            <div id="monthPicker" class="mpick hidden" role="dialog" aria-label="选择年份和月份"></div>
+          </div>
+          <div id="cal" class="cal" aria-label="日历"></div>
+          <form id="jumpForm" class="jump"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="4.5"/><path d="m10.5 10.5 3 3"/></svg><input id="jump" type="text" inputmode="numeric" placeholder="跳到日期，如 10-8" aria-label="跳到日期" autocomplete="off" enterkeyhint="go"></form>
+          <p id="jumpError" class="jump-error hidden" role="alert">请输入有效日期，例如 2026-10-08</p>
         </div>
-        <div id="cal" class="cal hidden"></div>
-        <div id="browseSummary" class="summary"></div>
         <div id="browseList" aria-busy="false"></div>
       </section>
       <section id="paneChat" class="panel" aria-labelledby="chatTitle">
@@ -381,7 +480,7 @@
         <div id="budgetBody" class="pane-body center-scroll"></div>
       </section>
       <section id="paneMore" class="panel" aria-labelledby="moreTitle">
-        <div class="panel-head"><span class="mark" aria-hidden="true">⋯</span><h2 id="moreTitle">对账与规则</h2><button class="quiet" id="moreReload" type="button">刷新</button></div>
+        <div class="panel-head"><span class="mark" aria-hidden="true">⋯</span><h2 id="moreTitle">对账与规则</h2><button class="quiet" id="moreReload" type="button">刷新</button><button class="quiet d-only" id="moreClose" type="button" aria-label="关闭">关闭</button></div>
         <div id="moreBody" class="pane-body center-scroll"></div>
         <div class="dialog-actions" style="justify-content:flex-start"><button class="quiet" id="logout" type="button">退出登录</button></div>
       </section>
@@ -499,28 +598,43 @@ $("pass").addEventListener("keydown",e => { if (e.key === "Enter" && !e.isCompos
 function lightbox(src) { $("lightbox").querySelector("img").src = src; $("lightbox").classList.remove("hidden"); }
 $("lightbox").onclick = () => $("lightbox").classList.add("hidden");
 
-/* Receipt cards */
-function itemsBlock(r) {
-  if (!r.items?.length) return null;
-  const box = el("div",{ class:"items" });
-  const draw = (all) => {
-    box.replaceChildren(...(all ? r.items : r.items.slice(0,5)).map(i => el("div",{ class:"item" },
-      el("span",{},Number(i.quantity)>1 ? `${i.name} ×${Number(i.quantity)}` : i.name),
-      el("span",{ class:"num" },Number(i.price)>0 ? money(Number(i.price),r.currency) : ""))));
-    if (!all && r.items.length>5) box.append(el("button",{ class:"more",onclick:()=>draw(true) },`另外 ${r.items.length-5} 项…`));
-  };
-  draw(false); return box;
-}
+/* A receipt slip, drawn like the Mac's: the first few items, all of them after a tap. */
+const PREVIEW = 3, expanded = new Set();
+const ICONS = {
+  doc: '<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/><circle cx="11.5" cy="13.5" r="2.5"/><path d="m13.5 15.5 2 2"/>',
+  cal: '<rect x="4" y="5" width="16" height="15" rx="2.5"/><path d="M4 10h16M8 3v4M16 3v4"/>',
+  trash: '<path d="M5 7h14M10 7V4h4v3M7 7l1 13h8l1-13"/>',
+};
+const icon = (name) => { const s = document.createElementNS("http://www.w3.org/2000/svg","svg"); s.setAttribute("viewBox","0 0 24 24"); s.setAttribute("aria-hidden","true"); s.innerHTML = ICONS[name]; return s; };
 function card(r,{ editable = false } = {}) {
-  const node = el("div",{ class:"card receipt-card","data-receipt-id":r.id },
-    el("div",{ class:"top" },el("div",{},el("div",{ class:"merchant" },r.merchant || "未识别商家"),
-      el("div",{ class:"sub receipt-date" },r.date)),el("div",{ class:"total num" },moneyOf(r))),itemsBlock(r));
-  const actions = el("div",{ class:"actions" });
-  if (r.view_url) actions.append(el("button",{ onclick:()=>lightbox(r.view_url) },"查看原件"));
-  if (editable) actions.append(el("button",{ onclick:()=>editDate(r),"aria-label":`修改 ${r.merchant || "小票"} 的日期` },"修改日期"),
-    el("button",{ class:"delete",onclick:()=>confirmDelete(r),"aria-label":`从项目库删除 ${r.merchant || "小票"}` },"删除"));
-  if (actions.childNodes.length) node.append(actions);
-  return node;
+  const name = r.merchant || "未识别商家", items = r.items || [];
+  const acts = el("div",{ class:"r-acts" });
+  if (r.view_url) acts.append(el("button",{ type:"button",title:"查看原件","aria-label":`查看 ${name} 的原件`,onclick:()=>lightbox(r.view_url) },icon("doc")));
+  if (editable) acts.append(
+    el("button",{ type:"button",title:"修改日期","aria-label":`修改 ${name} 的日期`,onclick:()=>editDate(r) },icon("cal")),
+    el("button",{ type:"button",class:"delete",title:"从项目库删除","aria-label":`从项目库删除 ${name}`,onclick:()=>confirmDelete(r) },icon("trash")));
+  const paper = el("div",{ class:"paper" });
+  const draw = () => {
+    const open = expanded.has(r.id), shown = open ? items : items.slice(0,PREVIEW);
+    paper.replaceChildren(
+      el("div",{ class:"r-top" },el("div",{ class:"merchant" },name),el("div",{ class:"total num" },moneyOf(r))),
+      el("div",{ class:"r-sub" },el("span",{ class:"receipt-date num" },r.date),acts),
+      shown.length ? el("hr",{ class:"rule" }) : null,
+      shown.length ? el("div",{ class:"r-items" },...shown.map(i => el("div",{ class:"r-item" },
+        el("span",{ class:"n" },Number(i.quantity) > 1 ? `${i.name} ×${Number(i.quantity)}` : i.name),
+        el("i",{ class:"lead" }),
+        el("span",{ class:"p num" },Number(i.price) > 0 ? money(Number(i.price),r.currency) : ""))),
+        !open && items.length > PREVIEW ? el("div",{ class:"r-more" },`… 另有 ${items.length - PREVIEW} 项，点开查看`) : null) : null);
+  };
+  if (items.length > PREVIEW) {
+    paper.classList.add("expandable"); paper.tabIndex = 0; paper.setAttribute("role","button");
+    const toggle = () => { expanded.has(r.id) ? expanded.delete(r.id) : expanded.add(r.id); draw(); paper.setAttribute("aria-expanded",String(expanded.has(r.id))); };
+    paper.setAttribute("aria-expanded",String(expanded.has(r.id)));
+    paper.onclick = e => { if (!e.target.closest("button")) toggle(); };
+    paper.onkeydown = e => { if ((e.key === "Enter" || e.key === " ") && e.target === paper) { e.preventDefault(); toggle(); } };
+  }
+  draw();
+  return el("div",{ class:"slip receipt-card","data-receipt-id":r.id },paper);
 }
 function dayGroups(list,withHeader = true) {
   const nodes = []; let date;
@@ -652,7 +766,7 @@ document.addEventListener("keydown",e => {
 });
 
 /* Browsing: request generations prevent a slow old month from overwriting a new selection. */
-let months = null, cache = {}, selMonth = null, selDay = null, calOpen = false, browseEpoch = 0, libraryVersion = 0;
+let months = null, cache = {}, selMonth = null, selDay = null, pickerYear = null, browseEpoch = 0, libraryVersion = 0;
 async function openBrowse() {
   const epoch = ++browseEpoch, version = libraryVersion;
   $("browseList").setAttribute("aria-busy","true");
@@ -678,7 +792,7 @@ async function refreshLibrary({ day } = {}) {
 }
 async function pickMonth(month,day = null) {
   const epoch = ++browseEpoch, version = libraryVersion;
-  selMonth = month; selDay = day; drawMonths(); drawCalendar();
+  selMonth = month; selDay = day; drawSummary(); drawCalendar();
   $("browseList").setAttribute("aria-busy","true");
   if (!cache[month]) {
     $("browseList").replaceChildren(el("div",{ class:"empty" },el("span",{ class:"spin" }),"加载中…"));
@@ -697,38 +811,79 @@ async function pickMonth(month,day = null) {
   if (epoch !== browseEpoch || !passcode) return;
   drawList(); drawCalendar(); $("browseList").setAttribute("aria-busy","false");
 }
-function drawMonths() {
-  const list = (months || []).slice();
-  if (selMonth && !list.some(m=>m.month === selMonth)) list.push({ month:selMonth,count:0 });
-  list.sort((a,b)=>b.month.localeCompare(a.month));
-  $("months").replaceChildren(...list.map(m=>el("button",{ class:m.month === selMonth ? "on" : "",onclick:()=>pickMonth(m.month) },monthTitle(m.month),el("small",{ class:"num" },String(m.count)))));
+/* The pane title reads like the Mac's: what is shown and how many, with 整月 to drop a day filter. */
+function drawSummary() {
+  const all = cache[selMonth];
+  const count = all ? (selDay ? all.filter(r=>r.date === selDay) : all).length : null;
+  $("browseSummary").textContent = [selDay ? dayTitle(selDay) : selMonth ? monthTitle(selMonth) : "", count == null ? "" : `${count} 张`].filter(Boolean).join(" · ");
+  $("wholeMonth").classList.toggle("hidden",!selDay);
 }
+$("wholeMonth").onclick = () => pickMonth(selMonth);
 function drawList() {
   const all = cache[selMonth] || [];
   const list = selDay ? all.filter(r=>r.date === selDay) : all;
-  $("browseSummary").replaceChildren(el("b",{},selDay ? dayTitle(selDay) : monthTitle(selMonth)),el("span",{ class:"muted num" },`${list.length} 张`));
-  if (selDay) $("browseSummary").append(el("button",{ class:"more",onclick:()=>pickMonth(selMonth) },"整月"));
+  drawSummary();
   $("browseList").replaceChildren(...(list.length ? dayGroups(list,!selDay) : [el("div",{ class:"empty" },selDay ? "这一天没有小票" : "这个月没有小票")]));
 }
+/* One month at a time, always shown, as on the Mac. Moving to another month selects it. */
 function drawCalendar() {
-  $("calToggle").classList.toggle("on",calOpen); $("calToggle").setAttribute("aria-expanded",String(calOpen));
-  $("cal").classList.toggle("hidden",!calOpen); if (!calOpen || !selMonth) return;
-  const [y,m] = selMonth.split("-").map(Number), first = new Date(y,m-1,1).getDay(), count = new Date(y,m,0).getDate();
-  const has = new Set((cache[selMonth] || []).map(r=>Number(r.date.slice(8)))), today = ymd(new Date());
-  const cells = WD.map(w=>el("div",{ class:"wd" },w));
+  const month = selMonth || ymd(new Date()).slice(0,7);
+  const [y,m] = month.split("-").map(Number), first = new Date(y,m-1,1).getDay(), count = new Date(y,m,0).getDate();
+  $("calTitle").textContent = `${y}年${m}月`;
+  const has = new Set((cache[month] || []).map(r=>Number(r.date.slice(8)))), today = ymd(new Date());
+  const cells = WD.map(w=>el("div",{ class:"wd","aria-hidden":"true" },w));
   for (let i=0;i<first;i++) cells.push(el("div"));
   for (let d=1;d<=count;d++) {
-    const key = `${selMonth}-${String(d).padStart(2,"0")}`;
-    cells.push(el("button",{ class:[has.has(d)?"has":"",key===selDay?"sel":"",key===today?"today":""].join(" "),"aria-label":key,onclick:()=>pickMonth(selMonth,key) },String(d)));
+    const key = `${month}-${String(d).padStart(2,"0")}`;
+    cells.push(el("button",{ type:"button",class:[has.has(d)?"has":"",key===selDay?"sel":"",key===today?"today":""].join(" "),"aria-label":key,"aria-pressed":String(key===selDay),onclick:()=>pickMonth(month,key) },String(d)));
   }
-  $("cal").replaceChildren(el("div",{ class:"grid" },...cells));
+  $("cal").replaceChildren(...cells);
 }
-$("calToggle").onclick = () => { calOpen = !calOpen; drawCalendar(); };
+function shiftMonth(by) {
+  const [y,m] = (selMonth || ymd(new Date()).slice(0,7)).split("-").map(Number);
+  pickMonth(ymd(new Date(y,m-1+by,1)).slice(0,7));
+}
+$("calPrev").onclick = () => shiftMonth(-1);
+$("calNext").onclick = () => shiftMonth(1);
+$("calToday").onclick = () => { const t = ymd(new Date()); pickMonth(t.slice(0,7),t); };
+/* The title opens a year of months with their receipt counts; arrows move between years. */
+function drawPicker() {
+  const counts = new Map((months || []).map(m=>[m.month,m.count]));
+  const now = new Date().getFullYear(), years = [...counts.keys()].map(k=>Number(k.slice(0,4)));
+  const min = Math.min(now,...years), max = Math.max(now,...years);
+  const total = [...counts].filter(([k])=>k.startsWith(`${pickerYear}-`)).reduce((n,[,c])=>n+c,0);
+  $("monthPicker").replaceChildren(
+    el("div",{ class:"yr" },
+      el("button",{ type:"button",class:"icon-btn","aria-label":"上一年",disabled:pickerYear <= min,onclick:()=>{ pickerYear--; drawPicker(); } },"‹"),
+      el("div",{},el("b",{},`${pickerYear} 年`),el("small",{},total ? `${total} 张小票` : "没有小票")),
+      el("button",{ type:"button",class:"icon-btn","aria-label":"下一年",disabled:pickerYear >= max,onclick:()=>{ pickerYear++; drawPicker(); } },"›")),
+    el("div",{ class:"grid" },...Array.from({ length:12 },(_,i) => {
+      const key = `${pickerYear}-${String(i+1).padStart(2,"0")}`, c = counts.get(key) || 0;
+      return el("button",{ type:"button",class:key === selMonth ? "on" : c ? "" : "none","aria-pressed":String(key === selMonth),onclick:()=>{ closePicker(); pickMonth(key); } },
+        `${i+1}月`,el("small",{},c ? `${c} 张` : "—"));
+    })));
+}
+function openPicker() {
+  pickerYear = Number((selMonth || ymd(new Date())).slice(0,4)); drawPicker();
+  $("monthPicker").classList.remove("hidden"); $("monthBtn").setAttribute("aria-expanded","true");
+  $("monthPicker").querySelector(".grid .on, .grid button")?.focus();
+}
+function closePicker() {
+  if ($("monthPicker").classList.contains("hidden")) return;
+  $("monthPicker").classList.add("hidden"); $("monthBtn").setAttribute("aria-expanded","false");
+}
+$("monthBtn").onclick = e => { e.stopPropagation(); $("monthPicker").classList.contains("hidden") ? openPicker() : closePicker(); };
+// Clicks inside re-render the picker, so they must not reach the outside-click handler below.
+$("monthPicker").onclick = e => e.stopPropagation();
+document.addEventListener("click",() => closePicker());
+document.addEventListener("keydown",e => { if (e.key === "Escape" && !$("monthPicker").classList.contains("hidden")) { closePicker(); $("monthBtn").focus(); } });
 $("jumpForm").onsubmit = async e => {
   e.preventDefault(); const day = parseDate($("jump").value);
-  if (!day) { notice("请输入有效日期，例如 2026-10-08",true); return; }
-  calOpen = true; await pickMonth(day.slice(0,7),day); $("jump").value = "";
+  $("jumpForm").classList.toggle("err",!day); $("jumpError").classList.toggle("hidden",!!day);
+  if (!day) return;
+  $("jump").value = ""; await pickMonth(day.slice(0,7),day);
 };
+$("jump").oninput = () => { $("jumpForm").classList.remove("err"); $("jumpError").classList.add("hidden"); };
 async function prepare(file) {
   const bmp = await createImageBitmap(file, { imageOrientation: "from-image" });
   const scale = Math.min(1, 2576 / Math.max(bmp.width, bmp.height));
@@ -782,7 +937,23 @@ function ensureLoaded(name) {
 }
 document.querySelectorAll("#tabs button").forEach(b => b.onclick = () => setTab(b.dataset.tab));
 wideQuery?.addEventListener?.("change", () => setTab(tab));
-deskQuery?.addEventListener?.("change", () => setTab(tab));
+// The Mac keeps the calendar under the archive; a phone shows it above the receipts.
+function placeCalendar() {
+  if (deskQuery?.matches) $("paneUpload").append($("calBox"));
+  else $("paneBrowse").insertBefore($("calBox"),$("browseList"));
+}
+function setMore(open) {
+  if (open) { document.body.dataset.more = ""; ensureLoaded("more"); $("moreClose").focus(); }
+  else delete document.body.dataset.more;
+  $("moreBtn").setAttribute("aria-expanded",String(open));
+}
+$("moreBtn").onclick = e => { e.stopPropagation(); setMore(!("more" in document.body.dataset)); };
+$("moreClose").onclick = () => { setMore(false); $("moreBtn").focus(); };
+$("paneMore").addEventListener("click",e => e.stopPropagation());
+document.addEventListener("click",() => { if ("more" in document.body.dataset) setMore(false); });
+document.addEventListener("keydown",e => { if (e.key === "Escape" && "more" in document.body.dataset && !document.querySelector("dialog[open]")) setMore(false); });
+deskQuery?.addEventListener?.("change", () => { placeCalendar(); if (!deskQuery.matches) setMore(false); setTab(tab); });
+placeCalendar();
 
 /* Shared helpers for the read-only panes */
 const usd = (n) => (n < 0 ? "-" : "") + "$" + fmt.format(Math.abs(n));
@@ -1032,7 +1203,7 @@ $("refresh").onclick = () => {
   if (loaded.share) loadShare(true);
   if (loaded.more) loadMore();
 };
-drawHistory(); show();
+drawHistory(); drawCalendar(); show();
 setTab(store.get("tab") || "browse",{ remember:false });
 if (passcode) openBrowse();
 

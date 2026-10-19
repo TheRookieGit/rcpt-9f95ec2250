@@ -211,7 +211,7 @@ test('last receipt deletion leaves an empty navigable calendar',async t=>{
   const f=await fixture({records:[{id:first,date:'2026-10-08',merchant:'First',total:1,items:[]}]});t.after(f.close);
   f.d.querySelector('.delete').click();click(f,'deleteSave');
   await until(()=>f.d.getElementById('libraryCount').textContent==='0 张小票');
-  click(f,'calToggle');assert.equal(f.d.querySelectorAll('#cal button').length,31);
+  assert.equal(f.d.querySelectorAll('#cal button').length,31);
   assert.equal(f.d.querySelectorAll('#cal .has').length,0);
 });
 test('a slower old month cannot replace a newer selection',async t=>{
@@ -230,4 +230,44 @@ test('merchant and item strings are rendered as text',async t=>{
   assert.match(f.d.querySelector('.merchant').textContent,/<img/);
   assert.equal(f.d.querySelector('#browseList img'),null);
   assert.equal(f.d.querySelector('#browseList script'),null);
+});
+test('the calendar is always shown and its title opens a year of months with counts',async t=>{
+  const f=await fixture({records:[
+    {id:first,date:'2026-10-08',merchant:'First',total:1,items:[]},
+    {id:second,date:'2026-08-03',merchant:'August',total:2,items:[]}]});t.after(f.close);
+  assert.equal(f.d.getElementById('calTitle').textContent,'2026年10月');
+  assert.equal(f.d.querySelectorAll('#cal .has').length,1);
+  click(f,'monthBtn');
+  const picker=f.d.getElementById('monthPicker');
+  assert.equal(picker.classList.contains('hidden'),false);
+  const months=[...picker.querySelectorAll('.grid button')];
+  assert.equal(months.length,12);
+  assert.match(months[7].textContent,/8月1 张/);
+  assert.equal(months[6].classList.contains('none'),true);
+  months[7].click();
+  assert.equal(picker.classList.contains('hidden'),true);
+  await until(()=>f.d.getElementById('browseList').textContent.includes('August'));
+  assert.equal(f.d.getElementById('calTitle').textContent,'2026年8月');
+  click(f,'calNext');
+  await until(()=>f.d.getElementById('calTitle').textContent==='2026年9月'&&f.d.getElementById('browseList').textContent.includes('这个月没有小票'));
+});
+test('a jump to an invalid date is flagged under the field, and a day filter can return to the whole month',async t=>{
+  const f=await fixture();t.after(f.close);
+  input(f,'jump','2026-02-30');f.d.getElementById('jumpForm').requestSubmit();
+  assert.equal(f.d.getElementById('jumpError').classList.contains('hidden'),false);
+  input(f,'jump','10-8');f.d.getElementById('jumpForm').requestSubmit();
+  await until(()=>f.d.getElementById('browseSummary').textContent.includes('10月8日'));
+  assert.equal(f.d.getElementById('wholeMonth').classList.contains('hidden'),false);
+  click(f,'wholeMonth');
+  await until(()=>f.d.getElementById('browseSummary').textContent==='2026年10月 · 2 张');
+});
+test('a receipt shows three items until tapped',async t=>{
+  const items=['A','B','C','D','E'].map(name=>({name,quantity:1,price:1}));
+  const f=await fixture({records:[{id:first,date:'2026-10-08',merchant:'Long',total:5,currency:'USD',items}]});t.after(f.close);
+  const paper=f.d.querySelector('.paper');
+  assert.equal(paper.querySelectorAll('.r-item').length,3);
+  assert.match(paper.textContent,/另有 2 项/);
+  paper.click();
+  assert.equal(f.d.querySelectorAll('.paper .r-item').length,5);
+  assert.equal(paper.getAttribute('aria-expanded'),'true');
 });
