@@ -194,6 +194,92 @@
     .panel { padding: 13px; }
     .badge { padding: 5px 7px; }
   }
+
+  /* tabs and panes */
+  main { padding-bottom: calc(86px + env(safe-area-inset-bottom)); }
+  .workspace > .panel { display: none; }
+  body[data-tab="upload"] #paneUpload, body[data-tab="browse"] #paneBrowse, body[data-tab="tx"] #paneTx,
+  body[data-tab="share"] #paneShare, body[data-tab="budget"] #paneBudget, body[data-tab="chat"] #paneChat,
+  body[data-tab="more"] #paneMore { display: block; }
+  .tabs {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; display: flex; justify-content: space-around;
+    padding: 6px 6px calc(6px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line);
+    background: color-mix(in srgb, var(--bg) 86%, transparent); backdrop-filter: saturate(1.6) blur(18px); -webkit-backdrop-filter: saturate(1.6) blur(18px);
+  }
+  .tabs button { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 2px; border-radius: 12px; color: var(--faint); font-size: 10.5px; font-weight: 600; }
+  .tabs button svg { width: 23px; height: 23px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+  .tabs button.on { color: var(--accent); }
+  .tabs button span { white-space: nowrap; }
+  .tabs button svg { flex: none; }
+  .seg { display: flex; gap: 2px; padding: 3px; border-radius: 12px; background: var(--surface-2); margin: 0 0 12px; }
+  .seg button { flex: 1; padding: 7px 4px; border-radius: 9px; font-size: 13px; font-weight: 600; color: var(--muted); }
+  .seg button.on { background: var(--surface); color: var(--text); box-shadow: 0 1px 3px rgba(0, 0, 0, .12); }
+  .row-line { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+  .tx { padding: 12px 14px; }
+  .tx .name { font-weight: 600; font-size: 15px; overflow-wrap: anywhere; }
+  .tx .amt { font-weight: 650; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .tx .amt.in { color: var(--good); }
+  .tx .meta { color: var(--muted); font-size: 12.5px; margin-top: 2px; overflow-wrap: anywhere; }
+  .tx .note { color: var(--muted); font-size: 13px; margin-top: 6px; overflow-wrap: anywhere; }
+  .tag { display: inline-block; margin: 6px 6px 0 0; padding: 2px 8px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-size: 12px; font-weight: 600; }
+  .tag.gray { background: var(--surface-2); color: var(--muted); }
+  .meter { height: 7px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
+  .meter i { display: block; height: 100%; border-radius: 999px; background: var(--good); }
+  .meter i.warn { background: #f59e0b; }
+  .meter i.over { background: var(--bad); }
+  .big { font-size: 28px; font-weight: 700; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+  .weeknav { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
+  .weeknav b { font-size: 16px; font-variant-numeric: tabular-nums; }
+  .weeknav button { width: 44px; height: 44px; border-radius: 12px; background: var(--surface-2); font-size: 18px; color: var(--accent); }
+  .weeknav button:disabled { color: var(--faint); }
+  .sumcard { border-radius: 16px; padding: 14px; background: var(--surface-2); margin-bottom: 12px; display: grid; gap: 8px; }
+  .sumcard .cols { display: flex; justify-content: space-between; gap: 12px; }
+  .sumcard small { display: block; color: var(--muted); font-size: 12px; }
+  .share-line { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; padding: 10px 0; border-top: 1px solid var(--line); font-size: 14px; }
+  .share-line:first-child { border-top: 0; }
+  .share-line .d { grid-column: 1 / -1; color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
+  .budget { padding: 14px; }
+  .budget .head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; text-align: left; width: 100%; }
+  .budget .detail { margin-top: 12px; display: grid; gap: 12px; }
+  .bars { display: flex; align-items: flex-end; gap: 6px; height: 96px; position: relative; padding-top: 6px; }
+  .bars .bar { flex: 1; border-radius: 5px 5px 2px 2px; background: color-mix(in srgb, var(--accent) 55%, transparent); min-height: 2px; }
+  .bars .bar.cur { background: var(--accent); }
+  .bars .bar.over { background: var(--bad); }
+  .bars .line { position: absolute; left: 0; right: 0; border-top: 1.5px dashed var(--faint); pointer-events: none; }
+  .bar-labels { display: flex; gap: 6px; font-size: 10px; color: var(--faint); }
+  .bar-labels span { flex: 1; text-align: center; }
+  .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
+  .stat { border-radius: 14px; background: var(--surface-2); padding: 10px; text-align: center; }
+  .stat b { display: block; font-size: 20px; font-variant-numeric: tabular-nums; }
+  .stat small { color: var(--muted); font-size: 12px; }
+  .section-title { font-size: 13px; font-weight: 600; color: var(--muted); margin: 18px 2px 8px; }
+  .lesson { padding: 11px 0; border-top: 1px solid var(--line); font-size: 14px; overflow-wrap: anywhere; }
+  .lesson:first-child { border-top: 0; }
+  .lesson small { display: block; color: var(--faint); font-size: 12px; margin-top: 3px; }
+  .pane-body { min-height: 80px; }
+  .center-scroll { overflow: auto; overscroll-behavior: contain; padding: 0 1px; }
+  @media (max-width: 999px) {
+    #chatScroll { max-height: none; min-height: 40dvh; }
+    #paneChat .chatbar { position: sticky; bottom: calc(66px + env(safe-area-inset-bottom)); background: var(--surface); padding-bottom: 4px; }
+    #browseList { max-height: none; }
+  }
+  @media (min-width: 1000px) {
+    main { padding-bottom: 20px; }
+    #app { display: flex; flex-direction: column; }
+    #app .tabs { order: 1; }
+    #app #notice { order: 2; }
+    #app .workspace { order: 3; }
+    .tabs { position: static; width: fit-content; margin: 0 0 14px; padding: 4px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); backdrop-filter: none; }
+    .tabs button { flex-direction: row; gap: 7px; padding: 8px 14px; font-size: 14px; }
+    .tabs button svg { width: 18px; height: 18px; }
+    .tabs button.on { background: var(--accent-soft); }
+    .tabs .m-only { display: none; }
+    .workspace { height: calc(100dvh - 176px); }
+    body[data-tab] #paneUpload, body[data-tab] #paneChat { display: flex; }
+    body[data-tab="browse"] #paneBrowse, body[data-tab="tx"] #paneTx, body[data-tab="share"] #paneShare,
+    body[data-tab="budget"] #paneBudget, body[data-tab="more"] #paneMore { display: flex; grid-column: 2; grid-row: 1; }
+    .center-scroll { flex: 1; min-height: 0; }
+  }
 </style>
 </head>
 <body>
@@ -254,7 +340,37 @@
           <button class="btn" id="go" type="submit" disabled>发送</button>
         </form></div>
       </section>
+      <section id="paneTx" class="panel" aria-labelledby="txTitle">
+        <div class="panel-head"><span class="mark" aria-hidden="true">☰</span><h2 id="txTitle">MoneyWiz 交易</h2><button class="quiet" id="txReload" type="button">刷新</button></div>
+        <div id="txMonths" class="months" aria-label="月份"></div>
+        <div id="txFlow" class="seg" role="group" aria-label="类型"><button type="button" data-flow="" class="on">全部</button><button type="button" data-flow="spending">支出</button><button type="button" data-flow="income">收入</button><button type="button" data-flow="refund">退款</button></div>
+        <form id="txSearchForm" class="tools"><input id="txSearch" type="text" placeholder="搜索收款方、分类、tag、备注" aria-label="搜索交易" autocomplete="off" enterkeyhint="search"><button class="quiet" type="submit">搜索</button></form>
+        <div id="txList" class="pane-body center-scroll" aria-busy="false"></div>
+        <p class="hint">只读，来自 Mac 上次同步的 MoneyWiz 数据；不含账户和余额。</p>
+      </section>
+      <section id="paneShare" class="panel" aria-labelledby="shareTitle">
+        <div class="panel-head"><span class="mark" aria-hidden="true">½</span><h2 id="shareTitle">每周分摊</h2><button class="quiet" id="shareReload" type="button">刷新</button></div>
+        <div id="shareBody" class="pane-body center-scroll"></div>
+      </section>
+      <section id="paneBudget" class="panel" aria-labelledby="budgetTitle">
+        <div class="panel-head"><span class="mark" aria-hidden="true">◔</span><h2 id="budgetTitle">预算</h2><button class="quiet" id="budgetReload" type="button">刷新</button></div>
+        <div id="budgetBody" class="pane-body center-scroll"></div>
+      </section>
+      <section id="paneMore" class="panel" aria-labelledby="moreTitle">
+        <div class="panel-head"><span class="mark" aria-hidden="true">⋯</span><h2 id="moreTitle">对账与规则</h2><button class="quiet" id="moreReload" type="button">刷新</button></div>
+        <div id="moreBody" class="pane-body center-scroll"></div>
+        <div class="dialog-actions" style="justify-content:flex-start"><button class="quiet" id="logout" type="button">退出登录</button></div>
+      </section>
     </div>
+    <nav id="tabs" class="tabs" aria-label="功能">
+      <button type="button" data-tab="upload" aria-selected="false" class="m-only"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11"/><path d="m7 10 5 5 5-5"/><path d="M5 19h14"/></svg><span>归档</span></button>
+      <button type="button" data-tab="browse" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/></svg><span>小票库</span></button>
+      <button type="button" data-tab="tx" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M3 10h18M7 15h4"/></svg><span>交易</span></button>
+      <button type="button" data-tab="share" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 12V4"/><path d="M12 12l5.5 5.5"/></svg><span>分摊</span></button>
+      <button type="button" data-tab="budget" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/></svg><span>预算</span></button>
+      <button type="button" data-tab="chat" aria-selected="false" class="m-only"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-7l-5 4v-4H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/></svg><span>对话</span></button>
+      <button type="button" data-tab="more" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/></svg><span>更多</span></button>
+    </nav>
   </section>
 </main>
 
@@ -285,7 +401,8 @@ let passcode = store.get("passcode") || "";
 const el = (tag, attrs = {}, ...kids) => {
   const n = document.createElement(tag);
   for (const [k,v] of Object.entries(attrs)) {
-    if (k === "class") n.className = v; else if (k.startsWith("on")) n[k] = v; else n.setAttribute(k,v);
+    if (v === false || v == null) continue;
+    if (k === "class") n.className = v; else if (k.startsWith("on")) n[k] = v; else n.setAttribute(k,v === true ? "" : v);
   }
   for (const k of kids.flat()) if (k != null && k !== false) n.append(k);
   return n;
@@ -349,7 +466,7 @@ $("enter").onclick = async () => {
   passcode = candidate; $("enter").disabled = true; $("loginError").textContent = "";
   try {
     await call({ action:"ping" }); store.set("passcode",passcode); $("pass").value = "";
-    show(); await openBrowse();
+    show(); setTab(tab,{ remember:false }); await openBrowse();
   } catch (e) { passcode = ""; show(); $("loginError").textContent = e.message; }
   finally { $("enter").disabled = false; }
 };
@@ -587,7 +704,6 @@ $("jumpForm").onsubmit = async e => {
   if (!day) { notice("请输入有效日期，例如 2026-10-08",true); return; }
   calOpen = true; await pickMonth(day.slice(0,7),day); $("jump").value = "";
 };
-$("refresh").onclick = () => { $("notice").classList.add("hidden"); refreshLibrary(); };
 async function prepare(file) {
   const bmp = await createImageBitmap(file, { imageOrientation: "from-image" });
   const scale = Math.min(1, 2576 / Math.max(bmp.width, bmp.height));
@@ -614,7 +730,281 @@ $("file").onchange = async e => {
     } catch (err) { box.replaceChildren(el("span",{ class:"bad" },err.message)); }
   }
 };
-drawHistory(); show(); if (passcode) openBrowse();
+/* Tabs: on a phone every section is a tab; wide screens keep archive and chat beside the selected tab. */
+const TABS = ["upload","browse","tx","share","budget","chat","more"];
+const wideQuery = typeof window.matchMedia === "function" ? window.matchMedia("(min-width: 1000px)") : null;
+const loaded = {};
+let tab = null;
+function setTab(name, { remember = true } = {}) {
+  if (!TABS.includes(name)) name = "browse";
+  if (wideQuery?.matches && (name === "upload" || name === "chat")) name = "browse";
+  tab = name; document.body.dataset.tab = name;
+  document.querySelectorAll("#tabs button").forEach(b => {
+    const on = b.dataset.tab === name; b.setAttribute("aria-selected",String(on)); b.classList.toggle("on",on);
+  });
+  if (remember) store.set("tab",name);
+  if (passcode) ensureLoaded(name);
+}
+function ensureLoaded(name) {
+  if (loaded[name]) return;
+  if (name === "tx") { loaded.tx = true; openTx(); }
+  else if (name === "share" || name === "budget") { loaded.share = loaded.share ?? true; loadShare(); }
+  else if (name === "more") { loaded.more = true; loadMore(); }
+}
+document.querySelectorAll("#tabs button").forEach(b => b.onclick = () => setTab(b.dataset.tab));
+wideQuery?.addEventListener?.("change", () => setTab(tab));
+
+/* Shared helpers for the read-only panes */
+const usd = (n) => (n < 0 ? "-" : "") + "$" + fmt.format(Math.abs(n));
+const shortDate = (d) => d.slice(5);
+function relTime(iso) {
+  const t = Date.parse(iso); if (!t) return "";
+  const m = Math.round((Date.now() - t) / 60000);
+  if (m < 1) return "刚刚"; if (m < 60) return `${m} 分钟前`;
+  if (m < 1440) return `${Math.round(m / 60)} 小时前`; return `${Math.round(m / 1440)} 天前`;
+}
+const loadingBox = (text = "加载中…") => el("div",{ class:"empty" },el("span",{ class:"spin" }),text);
+const errorBox = (err, retry) => el("div",{ class:"empty" },el("p",{ class:"bad" },err.message || String(err)),retry && el("button",{ class:"quiet",onclick:retry },"重试"));
+const waitingForMac = (what) => el("div",{ class:"empty" },`Mac 还没有同步${what}。`,el("br"),"在 Mac 上连接 MoneyWiz 并同步后会出现在这里。");
+function meter(fraction) {
+  const f = Math.min(Math.max(fraction, 0), 1);
+  return el("div",{ class:"meter",role:"presentation" },el("i",{ class:fraction >= 1 ? "over" : fraction >= 0.8 ? "warn" : "",style:`width:${(f * 100).toFixed(1)}%` }));
+}
+
+/* MoneyWiz transactions (read-only) */
+let txMonths = null, txMonth = null, txFlow = "", txQuery = "", txCache = {}, txEpoch = 0;
+async function openTx() {
+  const epoch = ++txEpoch;
+  $("txList").setAttribute("aria-busy","true"); $("txList").replaceChildren(loadingBox());
+  try {
+    const r = await call({ action:"ledger_months" });
+    if (epoch !== txEpoch || !passcode) return;
+    txMonths = r.months || [];
+    txMonth = txMonths.some(m => m.month === txMonth) ? txMonth : txMonths[0]?.month ?? null;
+    await pickTxMonth(txMonth);
+  } catch (err) {
+    if (epoch === txEpoch) { $("txList").replaceChildren(errorBox(err,openTx)); $("txList").setAttribute("aria-busy","false"); }
+  }
+}
+function drawTxMonths() {
+  $("txMonths").replaceChildren(...(txMonths || []).map(m => el("button",{ class:m.month === txMonth && !txQuery ? "on" : "",onclick:() => { $("txSearch").value = ""; txQuery = ""; pickTxMonth(m.month); } },monthTitle(m.month),el("small",{ class:"num" },String(m.count)))));
+}
+async function pickTxMonth(month) {
+  const epoch = ++txEpoch; txMonth = month; drawTxMonths();
+  if (!month) { drawTx([],false); return; }
+  if (!txCache[month]) {
+    $("txList").setAttribute("aria-busy","true"); $("txList").replaceChildren(loadingBox());
+    try { txCache[month] = (await call({ action:"ledger_list",month })).entries || []; }
+    catch (err) { if (epoch === txEpoch) { $("txList").replaceChildren(errorBox(err,() => pickTxMonth(month))); $("txList").setAttribute("aria-busy","false"); } return; }
+  }
+  if (epoch !== txEpoch || !passcode) return;
+  drawTx(txCache[month],false);
+}
+async function searchTx(q) {
+  txQuery = q.trim(); const epoch = ++txEpoch; drawTxMonths();
+  if (!txQuery) { await pickTxMonth(txMonth); return; }
+  $("txList").setAttribute("aria-busy","true"); $("txList").replaceChildren(loadingBox("搜索中…"));
+  try {
+    const r = await call({ action:"ledger_list",q:txQuery });
+    if (epoch !== txEpoch || !passcode) return;
+    drawTx(r.entries || [],true,r.truncated);
+  } catch (err) { if (epoch === txEpoch) { $("txList").replaceChildren(errorBox(err)); $("txList").setAttribute("aria-busy","false"); } }
+}
+const FLOW_LABEL = { spending:"支出", income:"收入", refund:"退款" };
+function txCard(e) {
+  const flow = e.flow || "spending", name = e.merchant || e.descr || "（无收款方）";
+  const tags = String(e.tags || "").split(/[,，;；]+/).map(t => t.trim()).filter(Boolean);
+  const node = el("div",{ class:"card tx","data-tx-id":e.id },
+    el("div",{ class:"row-line" },el("div",{ class:"name" },name),
+      el("div",{ class:"amt" + (flow === "spending" ? "" : " in") },(flow === "spending" ? "" : "+") + usd(Number(e.amount)))),
+    el("div",{ class:"meta" },[e.category || "未分类",e.date].filter(Boolean).join(" · ")));
+  const badges = [];
+  if (flow !== "spending") badges.push(el("span",{ class:"tag" },FLOW_LABEL[flow]));
+  tags.forEach(t => badges.push(el("span",{ class:"tag gray" },t)));
+  if (Array.isArray(e.receipts) && e.receipts.length) badges.push(el("span",{ class:"tag" },"含小票"));
+  if (badges.length) node.append(el("div",{},badges));
+  if (e.notes) node.append(el("div",{ class:"note" },e.notes));
+  return node;
+}
+function drawTx(entries, searching, truncated = false) {
+  const list = entries.filter(e => !txFlow || (e.flow || "spending") === txFlow);
+  const nodes = [];
+  if (searching) nodes.push(el("div",{ class:"summary" },el("b",{},`“${txQuery}”`),el("span",{ class:"muted num" },`${list.length} 笔${truncated ? "（仅显示最新 300 笔）" : ""}`)));
+  else if (txMonth) nodes.push(el("div",{ class:"summary" },el("b",{},monthTitle(txMonth)),el("span",{ class:"muted num" },`${list.length} 笔`)));
+  let date;
+  for (const e of list) {
+    if (e.date !== date) nodes.push(el("div",{ class:"day" },el("b",{},dayTitle(e.date))));
+    date = e.date; nodes.push(txCard(e));
+  }
+  if (!list.length) nodes.push(txMonths && !txMonths.length && !searching ? waitingForMac("交易") : el("div",{ class:"empty" },searching ? "没有找到匹配的交易" : "这个月没有交易"));
+  $("txList").replaceChildren(...nodes); $("txList").setAttribute("aria-busy","false");
+}
+$("txFlow").onclick = e => {
+  const b = e.target.closest("button[data-flow]"); if (!b) return;
+  txFlow = b.dataset.flow; $("txFlow").querySelectorAll("button").forEach(x => x.classList.toggle("on",x === b));
+  if (txQuery) searchTx(txQuery); else pickTxMonth(txMonth);
+};
+$("txSearchForm").onsubmit = e => { e.preventDefault(); searchTx($("txSearch").value); };
+$("txReload").onclick = () => { txCache = {}; openTx(); };
+
+/* Weekly share, running balance and budgets: one snapshot the Mac computed. */
+let shareSnap = null, shareAt = null, shareIdx = 0, shareError = null, shareLoading = null;
+const openBudgets = new Set();
+function loadShare(force = false) {
+  if (shareLoading) return shareLoading;
+  if (shareSnap && !force) { drawShare(); drawBudget(); return Promise.resolve(); }
+  $("shareBody").replaceChildren(loadingBox()); $("budgetBody").replaceChildren(loadingBox());
+  shareLoading = (async () => {
+    try {
+      const r = await call({ action:"share_get" });
+      shareSnap = r.snapshot || null; shareAt = r.updatedAt || null; shareError = null;
+      shareIdx = Math.min(shareIdx,Math.max((shareSnap?.weeks?.length || 1) - 1,0));
+    } catch (err) { shareError = err; }
+    finally { shareLoading = null; }
+    drawShare(); drawBudget();
+  })();
+  return shareLoading;
+}
+function weekText(w, snap) {
+  const out = [`区间：${w.start} ~ ${w.end}（周日–周六）`];
+  if (w.inProgress) out.push(`⏳ 这一周还没结束，数据截至今天 ${snap.today}`);
+  out.push("");
+  w.lines.forEach((l, i) => out.push(`${String(i + 1).padStart(2," ")}.  $${l.share.toFixed(2)}   ${l.descr}  [${shortDate(l.date)}]  (${l.note})`));
+  if (!w.lines.length) out.push("这一周没有需要计入的记录。");
+  out.push("");
+  out.push(`合计：$${w.total.toFixed(2)}（${w.lines.length} 笔）`);
+  const rem = snap.budget - w.total, budget = Number.isInteger(snap.budget) ? String(snap.budget) : snap.budget.toFixed(2);
+  out.push(`剩余：${rem < 0 ? "-" : ""}$${Math.abs(rem).toFixed(2)}（预算 $${budget}）`);
+  if (w.ignoredCount > 0) out.push(`已忽略 ${snap.ignoreCategory}：${w.ignoredCount} 笔（$${w.ignoredTotal.toFixed(2)}）`);
+  return out.join("\n");
+}
+async function copyText(text) {
+  try { await navigator.clipboard.writeText(text); notice("已复制"); return; } catch {}
+  const area = el("textarea",{ style:"position:fixed;opacity:0" }); area.value = text; document.body.append(area); area.select();
+  try { document.execCommand("copy"); notice("已复制"); } catch { notice("复制失败",true); }
+  area.remove();
+}
+function snapshotFooter() {
+  return el("p",{ class:"hint" },shareAt ? `Mac 上次同步：${relTime(shareAt)}。` : "",`数据来自 Mac；增删手动金额、修改规则请在 Mac 上操作。`);
+}
+function drawShare() {
+  const box = $("shareBody");
+  if (shareError) { box.replaceChildren(errorBox(shareError,() => loadShare(true))); return; }
+  const snap = shareSnap;
+  if (!snap || !snap.weeks?.length) { box.replaceChildren(waitingForMac("每周分摊")); return; }
+  const w = snap.weeks[shareIdx], rem = snap.budget - w.total, frac = snap.budget > 0 ? w.total / snap.budget : 0;
+  const nodes = [
+    el("div",{ class:"weeknav" },
+      el("button",{ id:"weekPrev",type:"button","aria-label":"上一周",disabled:shareIdx >= snap.weeks.length - 1,onclick:() => { shareIdx++; drawShare(); } },"‹"),
+      el("div",{ style:"text-align:center" },el("b",{},`${shortDate(w.start)} ~ ${shortDate(w.end)}`),
+        el("div",{ class:"muted",style:"font-size:12px" },w.inProgress ? "进行中" : w.settling ? "还在入账" : shareIdx === 0 ? "本周" : "已结束")),
+      el("button",{ id:"weekNext",type:"button","aria-label":"下一周",disabled:shareIdx <= 0,onclick:() => { shareIdx--; drawShare(); } },"›")),
+    el("div",{ class:"sumcard" },
+      el("div",{ class:"cols" },
+        el("div",{},el("small",{},`合计 · ${w.count} 笔`),el("div",{ class:"big" },usd(w.total))),
+        el("div",{ style:"text-align:right" },el("small",{},`剩余 · 预算 ${usd(snap.budget).replace(/\.00$/,"")}`),el("div",{ class:"big " + (rem < 0 ? "bad" : "good") },usd(rem)))),
+      meter(frac)),
+  ];
+  if (w.ignoredCount > 0) nodes.push(el("p",{ class:"hint",style:"margin:0 0 10px" },`已忽略 ${snap.ignoreCategory}：${w.ignoredCount} 笔（${usd(w.ignoredTotal)}）`));
+  if (w.warnings > 0) nodes.push(el("p",{ class:"bad",style:"font-size:13px;margin:0 0 10px" },`⚠️ ${w.warnings} 笔记录无法识别规则，没有计入，请在 Mac 上查看。`));
+  nodes.push(el("div",{},w.lines.length ? w.lines.map((l, i) => el("div",{ class:"share-line" },
+      el("span",{},`${i + 1}. ${l.descr}`),el("b",{ class:"num" },usd(l.share)),el("span",{ class:"d" },`${shortDate(l.date)} · ${l.note}`)))
+    : [el("div",{ class:"empty" },"这一周没有需要计入的记录。")]));
+  nodes.push(el("div",{ class:"dialog-actions",style:"justify-content:flex-start;margin-top:10px" },
+    el("button",{ id:"shareCopy",class:"btn",type:"button",onclick:() => copyText(weekText(w,snap)) },"复制本周")));
+  if (snap.carry) {
+    const c = snap.carry;
+    nodes.push(el("div",{ class:"section-title" },"累计"),
+      el("div",{ class:"sumcard" },
+        el("div",{ class:"cols" },el("div",{},el("small",{},"当前累计"),el("div",{ class:"big " + (c.balance < 0 ? "bad" : "good") },usd(c.balance))),
+          el("div",{ style:"text-align:right" },el("small",{},`自 ${c.startWeek} 起 · ${c.weeksCounted} 周`),el("small",{},`起始 ${usd(c.startAmount)}`))),
+        el("div",{ class:"muted",style:"font-size:13px" },`已结束各周剩余合计 ${usd(snap.budget * c.weeksCounted - c.weeksTotal)}，手动金额 ${usd(c.adjustmentsTotal)}`)));
+    if (c.adjustments?.length) nodes.push(el("div",{},c.adjustments.map(a => el("div",{ class:"share-line" },
+      el("span",{},a.note || "手动金额"),el("b",{ class:"num" },usd(a.amount)),el("span",{ class:"d" },a.date)))));
+  }
+  nodes.push(snapshotFooter());
+  box.replaceChildren(...nodes);
+}
+function barChart(b) {
+  const periods = [...b.past.slice(0,7).reverse(),b.current];
+  const top = Math.max(b.amount,...periods.map(p => p.spent),1);
+  const chart = el("div",{ class:"bars",role:"img","aria-label":`${b.name} 近 ${periods.length} 期支出` },
+    ...periods.map((p, i) => el("div",{ class:"bar" + (i === periods.length - 1 ? " cur" : "") + (p.spent > b.amount ? " over" : ""),style:`height:${Math.max(p.spent / top * 100,1)}%`,title:`${shortDate(p.start)}：${usd(p.spent)}` })),
+    el("div",{ class:"line",style:`bottom:${b.amount / top * 100}%` }));
+  return [chart,el("div",{ class:"bar-labels" },...periods.map(p => el("span",{},shortDate(p.start))))];
+}
+function budgetCard(b, snap) {
+  const frac = b.amount > 0 ? b.current.spent / b.amount : 0, rem = b.amount - b.current.spent;
+  const open = openBudgets.has(b.name);
+  const head = el("button",{ class:"head",type:"button","aria-expanded":String(open),onclick:() => { open ? openBudgets.delete(b.name) : openBudgets.add(b.name); drawBudget(); } },
+    el("div",{},el("div",{ class:"merchant" },b.name),el("div",{ class:"sub" },`${b.period} · ${shortDate(b.current.start)} ~ ${shortDate(b.current.end)} · 还剩 ${b.daysLeft} 天`)),
+    el("div",{ style:"text-align:right" },el("div",{ class:"total num" },usd(b.current.spent)),el("div",{ class:"sub num" },`/ ${usd(b.amount)}`)));
+  const node = el("div",{ class:"card budget" },head,el("div",{ style:"margin-top:10px" },meter(frac)),
+    el("div",{ class:"row-line",style:"margin-top:6px;font-size:13px" },
+      el("span",{ class:rem >= 0 ? "muted" : "bad" },rem >= 0 ? `剩余 ${usd(rem)}` : `超出 ${usd(-rem)}`),
+      el("span",{ class:"muted num" },`${Math.round(frac * 100)}%`)));
+  if (open) {
+    const detail = el("div",{ class:"detail" },...barChart(b));
+    const over = b.past.slice(0,7).filter(p => p.spent > b.amount).length;
+    if (over) detail.append(el("div",{ class:"bad",style:"font-size:13px" },`过去 7 期中 ${over} 期超支`));
+    const week = b.period === "每周" ? snap.weeks?.find(w => w.start === b.current.start) : null;
+    if (week) detail.append(el("div",{ class:"muted",style:"font-size:13px" },`同一周的每周分摊：${usd(week.total)}`));
+    if (b.categories?.length) detail.append(el("div",{},b.categories.map(c => el("span",{ class:"tag gray" },c))));
+    detail.append(el("div",{ class:"section-title",style:"margin:4px 0 0" },"本期支出"),
+      el("div",{},b.spends?.length ? b.spends.map(s => el("div",{ class:"share-line" },
+        el("span",{},s.payee || "（无收款方）"),el("b",{ class:"num" },usd(s.amount)),el("span",{ class:"d" },`${shortDate(s.date)} · ${s.category || "未分类"}`)))
+        : [el("div",{ class:"empty",style:"padding:12px" },"本期还没有支出")]));
+    node.append(detail);
+  }
+  return node;
+}
+function drawBudget() {
+  const box = $("budgetBody");
+  if (shareError) { box.replaceChildren(errorBox(shareError,() => loadShare(true))); return; }
+  if (!shareSnap?.budgets?.length) { box.replaceChildren(waitingForMac("预算")); return; }
+  box.replaceChildren(...shareSnap.budgets.map(b => budgetCard(b,shareSnap)),snapshotFooter());
+}
+$("shareReload").onclick = $("budgetReload").onclick = () => loadShare(true);
+
+/* Reconcile status and the rules the AI remembers (read-only) */
+async function loadMore() {
+  const box = $("moreBody"); box.replaceChildren(loadingBox());
+  const [rec, les] = await Promise.allSettled([call({ action:"reconcile_status" }),call({ action:"lessons_list" })]);
+  const nodes = [el("div",{ class:"section-title",style:"margin-top:0" },"小票与 MoneyWiz 对账")];
+  if (rec.status === "fulfilled") {
+    const r = rec.value;
+    nodes.push(el("div",{ class:"stat-grid" },
+      el("div",{ class:"stat" },el("b",{},String(r.moneywizCount)),el("small",{},"MoneyWiz 支出")),
+      el("div",{ class:"stat" },el("b",{ class:"good" },String(r.matched)),el("small",{},"已对上小票")),
+      el("div",{ class:"stat" },el("b",{},String(r.receiptOnlyCount)),el("small",{},"只有小票"))));
+    if (r.receiptOnly.length) {
+      nodes.push(el("p",{ class:"hint",style:"margin:0 0 6px" },"这些小票没有对上 MoneyWiz 的交易（现金、其他卡，或还没对上），按小票金额单独计入。"));
+      nodes.push(el("div",{},r.receiptOnly.map(x => el("div",{ class:"share-line" },el("span",{},x.merchant || "未识别商家"),el("b",{ class:"num" },usd(x.amount)),el("span",{ class:"d" },x.date)))));
+      if (r.receiptOnlyCount > r.receiptOnly.length) nodes.push(el("p",{ class:"hint" },`仅显示最新 ${r.receiptOnly.length} 张。`));
+    } else if (r.moneywizCount === 0 && r.receiptOnlyCount === 0) nodes.push(waitingForMac("账本"));
+    nodes.push(el("p",{ class:"hint" },"确认重复小票、小费和合并请在 Mac 的「对账」窗口里操作。"));
+  } else nodes.push(errorBox(rec.reason,loadMore));
+  nodes.push(el("div",{ class:"section-title" },"AI 记住的纠正"));
+  if (les.status === "fulfilled") {
+    const list = les.value.lessons || [];
+    nodes.push(el("div",{},list.length ? list.map(l => el("div",{ class:"lesson" },l.text,
+      el("small",{},[l.created,l.pulled ? "" : "等待 Mac 同步"].filter(Boolean).join(" · ")))) : [el("div",{ class:"empty",style:"padding:16px" },"还没有记住任何纠正")]));
+    nodes.push(el("p",{ class:"hint" },"在「对话」里直接说哪里认错了，AI 会记成一条规则并用于以后的识别。查看全部、编辑和删除请在 Mac 设置里的「AI 记住的纠正」。"));
+  } else nodes.push(errorBox(les.reason,loadMore));
+  box.replaceChildren(...nodes);
+}
+$("moreReload").onclick = loadMore;
+$("logout").onclick = () => { stopChat(); store.del("passcode"); passcode = ""; for (const k of Object.keys(loaded)) delete loaded[k]; shareSnap = null; txCache = {}; show(); };
+
+$("refresh").onclick = () => {
+  $("notice").classList.add("hidden"); refreshLibrary();
+  if (loaded.tx) { txCache = {}; openTx(); }
+  if (loaded.share) loadShare(true);
+  if (loaded.more) loadMore();
+};
+drawHistory(); show();
+setTab(store.get("tab") || "browse",{ remember:false });
+if (passcode) openBrowse();
 
 </script>
 </body>

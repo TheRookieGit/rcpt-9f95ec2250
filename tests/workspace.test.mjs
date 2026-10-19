@@ -41,11 +41,111 @@ function input(f,id,value){const n=f.d.getElementById(id);n.value=value;n.dispat
 const click=(f,id)=>f.d.getElementById(id).click();
 function send(f,text){input(f,'q',text);click(f,'go');}
 
-test('archive, browse and chat share one page without tabs',async t=>{
+test('every section is a tab and only the selected pane is active',async t=>{
   const f=await fixture();t.after(f.close);
-  for(const id of ['paneUpload','paneBrowse','paneChat'])assert.equal(f.d.getElementById(id).classList.contains('hidden'),false);
-  assert.equal(f.d.querySelector('nav'),null);
+  const tabs=[...f.d.querySelectorAll('#tabs button')].map(b=>b.dataset.tab);
+  assert.deepEqual(tabs,['upload','browse','tx','share','budget','chat','more']);
+  assert.equal(f.d.body.dataset.tab,'browse');
+  assert.equal(f.d.querySelector('#tabs [aria-selected="true"]').dataset.tab,'browse');
+  f.d.querySelector('#tabs [data-tab="chat"]').click();
+  assert.equal(f.d.body.dataset.tab,'chat');
+  assert.equal(f.w.localStorage.getItem('tab'),'chat');
   assert.equal(f.d.getElementById('libraryCount').textContent,'2 张小票');
+  assert.equal(f.requests.some(r=>['ledger_months','share_get','reconcile_status'].includes(r.action)),false);
+});
+const ledger=[
+  {id:'a',date:'2026-10-17',amount:50.99,merchant:'Aceking BBQ',descr:'ACEKING',category:'Restaurant',source:'moneywiz',receipts:[{file:'x',page:1,position:0}],flow:'spending',tags:'1/2',notes:'dinner'},
+  {id:'b',date:'2026-10-16',amount:1200,merchant:'Payroll',descr:'',category:'Salary',source:'moneywiz',receipts:[],flow:'income',tags:'',notes:''},
+  {id:'c',date:'2026-09-30',amount:9.5,merchant:'<b>Cafe</b>',descr:'',category:'Coffee',source:'moneywiz',receipts:[],flow:'spending',tags:'',notes:''}];
+function ledgerHandler(body){
+  if(body.action==='ledger_months') return response({months:[{month:'2026-10',count:2},{month:'2026-09',count:1}]});
+  if(body.action==='ledger_list'){
+    const list=body.q?ledger.filter(e=>(e.merchant+e.notes+e.category).toLowerCase().includes(body.q.toLowerCase())):ledger.filter(e=>e.date.startsWith(body.month));
+    return response({entries:list,truncated:false});
+  }
+}
+test('transactions tab groups by day, filters flows, searches and renders text only',async t=>{
+  const f=await fixture({handler:ledgerHandler});t.after(f.close);
+  f.d.querySelector('#tabs [data-tab="tx"]').click();
+  await until(()=>f.d.querySelectorAll('#txList .tx').length===2);
+  assert.match(f.d.getElementById('txList').textContent,/Aceking BBQ/);
+  assert.match(f.d.querySelector('[data-tx-id="a"]').textContent,/\$50\.99/);
+  assert.match(f.d.querySelector('[data-tx-id="a"]').textContent,/含小票/);
+  assert.match(f.d.querySelector('[data-tx-id="b"] .amt').textContent,/^\+\$1,?200\.00$/);
+  f.d.querySelector('#txFlow [data-flow="income"]').click();
+  await until(()=>f.d.querySelectorAll('#txList .tx').length===1);
+  f.d.querySelector('#txFlow [data-flow=""]').click();
+  await until(()=>f.d.querySelectorAll('#txList .tx').length===2);
+  input(f,'txSearch','cafe');f.d.getElementById('txSearchForm').dispatchEvent(new f.w.Event('submit',{cancelable:true,bubbles:true}));
+  await until(()=>f.d.querySelector('[data-tx-id="c"]'));
+  assert.equal(f.d.querySelector('#txList b b'),null);
+  assert.match(f.d.querySelector('[data-tx-id="c"]').textContent,/<b>Cafe<\/b>/);
+  assert.deepEqual(f.requests.filter(r=>r.action==='ledger_list').pop(),{action:'ledger_list',q:'cafe'});
+});
+const weeks=[
+  {start:'2026-10-18',end:'2026-10-24',total:120.5,remaining:279.5,count:1,inProgress:true,settling:false,ignoredCount:2,ignoredTotal:30,warnings:1,lines:[{date:'2026-10-19',descr:'Costco',share:120.5,note:'1/2 × $241.00'}]},
+  {start:'2026-10-11',end:'2026-10-17',total:450,remaining:-50,count:0,inProgress:false,settling:true,ignoredCount:0,ignoredTotal:0,warnings:0,lines:[]}];
+const snapshot={today:'2026-10-19',budget:400,countCategory:'Restaurant - Mellow',bothCategory:'Restaurant —— BOTHBOTH',ignoreCategory:'Restaurant - Vincent',weeks,
+  carry:{balance:81.25,startAmount:100,startWeek:'2026-09-06',weeksCounted:6,weeksTotal:2300,adjustmentsTotal:-50,adjustments:[{date:'2026-10-03',amount:-50,note:'Mellow 转账'}]},
+  budgets:[{name:'Monthly Budget',amount:2000,period:'每月',categories:['Groceries'],current:{start:'2026-10-01',end:'2026-10-31',spent:1700},daysLeft:12,
+    past:[{start:'2026-09-01',end:'2026-09-30',spent:2100},{start:'2026-08-01',end:'2026-08-31',spent:1500}],spends:[{date:'2026-10-17',payee:'Costco',category:'Groceries',amount:120}]},
+    {name:'Pocket',amount:400,period:'每周',categories:[],current:{start:'2026-10-18',end:'2026-10-24',spent:100},daysLeft:5,past:[],spends:[]}]};
+const shareHandler=body=>body.action==='share_get'?response({snapshot,updatedAt:new Date().toISOString()}):null;
+test('weekly share navigates weeks, flags overspending and copies the same text as the Mac',async t=>{
+  const f=await fixture({handler:shareHandler});t.after(f.close);
+  let copied='';Object.defineProperty(f.w.navigator,'clipboard',{value:{writeText:async x=>{copied=x;}}});
+  f.d.querySelector('#tabs [data-tab="share"]').click();
+  await until(()=>f.d.getElementById('weekPrev'));
+  assert.match(f.d.getElementById('shareBody').textContent,/10-18 ~ 10-24/);
+  assert.equal(f.d.getElementById('weekNext').disabled,true);
+  assert.match(f.d.getElementById('shareBody').textContent,/进行中/);
+  assert.match(f.d.getElementById('shareBody').textContent,/\$81\.25/);
+  f.d.getElementById('shareCopy').click();await until(()=>copied);
+  assert.equal(copied,['区间：2026-10-18 ~ 2026-10-24（周日–周六）','⏳ 这一周还没结束，数据截至今天 2026-10-19','',' 1.  $120.50   Costco  [10-19]  (1/2 × $241.00)','','合计：$120.50（1 笔）','剩余：$279.50（预算 $400）','已忽略 Restaurant - Vincent：2 笔（$30.00）'].join('\n'));
+  f.d.getElementById('weekPrev').click();
+  assert.match(f.d.getElementById('shareBody').textContent,/10-11 ~ 10-17/);
+  assert.match(f.d.querySelector('#shareBody .big.bad').textContent,/-\$50\.00/);
+  assert.equal(f.requests.filter(r=>r.action==='share_get').length,1);
+});
+test('budgets show progress, expand into history and compare the weekly share',async t=>{
+  const f=await fixture({handler:shareHandler});t.after(f.close);
+  f.d.querySelector('#tabs [data-tab="budget"]').click();
+  await until(()=>f.d.querySelectorAll('#budgetBody .budget').length===2);
+  const first=f.d.querySelectorAll('#budgetBody .budget')[0];
+  assert.match(first.textContent,/\$1,700\.00/);assert.match(first.textContent,/剩余 \$300\.00/);
+  assert.equal(first.querySelector('.meter i').className,'warn');
+  first.querySelector('.head').click();
+  assert.equal(f.d.querySelectorAll('#budgetBody .bars .bar').length,3);
+  assert.match(f.d.querySelector('#budgetBody .detail').textContent,/过去 7 期中 1 期超支/);
+  f.d.querySelectorAll('#budgetBody .budget')[1].querySelector('.head').click();
+  assert.match(f.d.getElementById('budgetBody').textContent,/同一周的每周分摊：\$120\.50/);
+});
+test('missing Mac data and failures are explained, with a way to retry',async t=>{
+  let fail=true;
+  const f=await fixture({handler:b=>b.action==='share_get'?(fail?response({error:'服务器出错了'},500):response({snapshot:null,updatedAt:null})):null});t.after(f.close);
+  f.d.querySelector('#tabs [data-tab="share"]').click();
+  await until(()=>/服务器出错了/.test(f.d.getElementById('shareBody').textContent));
+  fail=false;f.d.querySelector('#shareBody button').click();
+  await until(()=>/Mac 还没有同步每周分摊/.test(f.d.getElementById('shareBody').textContent));
+  assert.match(f.d.getElementById('budgetBody').textContent,/Mac 还没有同步预算/);
+});
+test('reconcile status and remembered rules are listed read-only',async t=>{
+  const f=await fixture({handler:b=>b.action==='reconcile_status'?response({moneywizCount:10,matched:7,receiptOnlyCount:1,receiptOnly:[{id:'r',date:'2026-10-01',amount:12.5,merchant:'Cash Cafe'}]})
+    :b.action==='lessons_list'?response({lessons:[{id:1,text:'饭团外卖的截图也是小票',created:'2026-10-05',pulled:true},{id:2,text:'<i>x</i>',created:'2026-10-06',pulled:false}]}):null});t.after(f.close);
+  f.d.querySelector('#tabs [data-tab="more"]').click();
+  await until(()=>f.d.querySelectorAll('#moreBody .lesson').length===2);
+  assert.match(f.d.getElementById('moreBody').textContent,/Cash Cafe/);
+  assert.equal(f.d.querySelectorAll('#moreBody .stat b')[1].textContent,'7');
+  assert.match(f.d.getElementById('moreBody').textContent,/等待 Mac 同步/);
+  assert.equal(f.d.querySelector('#moreBody i'),null);
+  assert.equal(f.d.querySelector('#moreBody .lesson button'),null);
+});
+test('logging out clears the passcode and the loaded data',async t=>{
+  const f=await fixture({handler:shareHandler});t.after(f.close);
+  f.d.querySelector('#tabs [data-tab="share"]').click();await until(()=>f.d.getElementById('weekPrev'));
+  click(f,'logout');
+  assert.equal(f.w.localStorage.getItem('passcode'),null);
+  assert.equal(f.d.getElementById('login').classList.contains('hidden'),false);
 });
 test('typed date is validated and saved for one receipt only',async t=>{
   const f=await fixture();t.after(f.close);
