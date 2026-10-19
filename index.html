@@ -421,6 +421,7 @@ async function call(body, { signal } = {}) {
     stopChat(); store.del("passcode"); passcode = ""; show();
     throw new Error(json.error || "口令不对");
   }
+  if (res.status === 400 && json.error === "未知操作") throw new Error("云端 api 函数还是旧版本，请在 Mac 上运行 supabase functions deploy api --no-verify-jwt");
   if (!res.ok) throw new Error(json.error || `出错了（${res.status}）`);
   return json;
 }
