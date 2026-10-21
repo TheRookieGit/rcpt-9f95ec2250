@@ -1086,7 +1086,7 @@ async function copyText(text) {
   area.remove();
 }
 function snapshotFooter() {
-  return el("p",{ class:"hint" },shareAt ? `Mac 上次同步：${relTime(shareAt)}。` : "",`数据来自 Mac；增删手动金额、修改规则请在 Mac 上操作。`);
+  return el("p",{ class:"hint" },shareAt ? `Mac 上次同步：${relTime(shareAt)}。` : "",`数据来自 Mac；增删改手动金额、修改规则请在 Mac 上操作。`);
 }
 function drawShare() {
   const box = $("shareBody");
