@@ -397,6 +397,37 @@
     #paneChat { background: var(--surface-2); box-shadow: 0 2px 6px rgba(0, 0, 0, .08), 0 12px 32px rgba(0, 0, 0, .12); }
     #paneChat .bubble.ai, #paneChat .chip, #paneChat input[type=text] { background: var(--surface); }
   }
+  /* New calendar events drafted in the chat: an editable ticket per event, added by the Mac once confirmed. */
+  .evbox { background: var(--accent-soft); border: 1px solid var(--line); border-radius: 16px; padding: 12px; display: grid; gap: 10px; }
+  .evbox.done { background: var(--surface); }
+  .evbox > .ev-head { font-weight: 650; font-size: 15px; color: var(--accent); }
+  .ev { background: var(--paper); border-radius: 10px; padding: 10px 12px 12px; display: grid; gap: 8px; position: relative;
+    border-left: 4px solid var(--cal, var(--accent)); filter: drop-shadow(0 1px 1.5px rgba(0, 0, 0, .1)); }
+  .ev .ev-title { display: flex; gap: 8px; align-items: flex-start; }
+  .ev .ev-title textarea { flex: 1; font: 650 16px/1.3 -apple-system, "PingFang SC", sans-serif; border: 0; background: none; color: var(--text); resize: none; padding: 2px 0; min-height: 0; field-sizing: content; }
+  .ev .ev-x { width: 32px; height: 32px; border-radius: 50%; color: var(--muted); flex: none; }
+  .ev hr { border: 0; border-top: 1px dashed var(--faint); margin: 0; }
+  .ev .ev-row { display: grid; grid-template-columns: 22px 1fr; gap: 8px; align-items: center; font-size: 15px; }
+  .ev .ev-row > span { color: var(--muted); text-align: center; font-size: 14px; }
+  .ev .ev-row .pair { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .ev input, .ev select, .ev textarea.loc { font: inherit; font-size: 15px; color: var(--text); background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; min-height: 40px; min-width: 0; }
+  .ev input[type=date] { width: auto; flex: 1; }
+  .ev input[type=time] { width: 7.2em; }
+  .ev select { width: 100%; -webkit-appearance: none; appearance: none; }
+  .ev textarea.loc { width: 100%; resize: none; field-sizing: content; }
+  .ev label.allday { display: flex; gap: 6px; align-items: center; font-size: 14px; color: var(--muted); }
+  .ev .ev-hist { font-size: 12px; color: var(--muted); display: grid; gap: 6px; }
+  .ev .ev-hist .chips { margin: 0; }
+  .ev .ev-hist .chip { font-size: 12.5px; padding: 6px 10px; text-align: left; border-radius: 10px; }
+  .ev .ev-hist .chip.on { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+  .ev .ev-warn { font-size: 13px; color: #b45309; }
+  .ev :disabled { opacity: .75; }
+  .ev-actions { display: flex; justify-content: flex-end; gap: 8px; align-items: center; }
+  .ev-actions .btn { padding: 10px 16px; }
+  .ev-actions .cancel { background: var(--surface); color: var(--text); border: 1px solid var(--line); }
+  .ev-note { font-size: 12px; color: var(--faint); text-align: right; }
+  .ev-status { font-size: 14px; display: flex; gap: 6px; align-items: flex-start; }
+  .mac-away { font-size: 13px; color: #b45309; margin-top: 4px; }
 </style>
 </head>
 <body>
@@ -671,12 +702,12 @@ $("dateForm").onsubmit = async e => {
   const r = editing;
   savingDate = true; $("dateSave").disabled = true; $("dateCancel").disabled = true;
   try {
-    await call({ action:"edit_receipt",id:r.id,date });
+    const res = await call({ action:"edit_receipt",id:r.id,date });
     r.date = date;
     document.querySelectorAll(".receipt-card").forEach(n => {
       if (n.dataset.receiptId === r.id) n.querySelector(".receipt-date").textContent = date;
     });
-    $("dateDialog").close(); notice("小票日期已更新");
+    $("dateDialog").close(); notice("小票日期已更新" + (res.mac && !res.mac.online ? `。${macAwayText(res.mac)}，Mac 上的库要等它醒来后才会更新` : ""));
     await refreshLibrary({ day:date });
   } catch (err) { $("dateError").textContent = err.message; }
   finally { savingDate = false; $("dateSave").disabled = false; $("dateCancel").disabled = false; }
@@ -692,9 +723,9 @@ $("deleteForm").onsubmit = async e => {
   const r = deleting;
   deletingReceipt = true; $("deleteSave").disabled = true; $("deleteCancel").disabled = true;
   try {
-    await call({ action:"delete_receipt",id:r.id });
+    const res = await call({ action:"delete_receipt",id:r.id });
     document.querySelectorAll(".receipt-card").forEach(n => { if (n.dataset.receiptId === r.id) n.remove(); });
-    $("deleteDialog").close(); notice("已从项目库删除，PDF 源文件已保留");
+    $("deleteDialog").close(); notice("已从项目库删除，PDF 源文件已保留" + (res.mac && !res.mac.online ? `。${macAwayText(res.mac)}，Mac 上的库要等它醒来后才会更新` : ""));
     await refreshLibrary();
   } catch (err) { $("deleteError").textContent = err.message; }
   finally { deletingReceipt = false; $("deleteSave").disabled = false; $("deleteCancel").disabled = false; }
@@ -716,9 +747,137 @@ function setChatBusy() {
   $("go").disabled = !busy && !$("q").value.trim();
   $("newChat").disabled = busy || !$("chatLog").childNodes.length;
 }
+/* Whether the Mac is there to pick up a change now. The cloud says so with every change from the phone. */
+function macAwayText(mac) {
+  if (!mac || mac.online) return "";
+  const why = mac.state === "sleeping" ? "Mac 正在睡眠" : mac.state === "quit" ? "Mac 上的 AutoReceipt 已退出" : "Mac 现在不在线";
+  return mac.seenAt ? `${why}（上次在线 ${relTime(mac.seenAt)}）` : why;
+}
+const macAwayLine = (mac, what) => mac && !mac.online ? el("div",{ class:"mac-away" },`⚠ ${macAwayText(mac)}，${what}要等 Mac 醒来、打开 AutoReceipt 后才会同步。`) : null;
+
+/* New calendar events drafted by the chat. Every field can be changed; "添加" queues them and the Mac creates them
+   in Calendar (only ever new events; nothing existing is changed or deleted). */
+const ALERTS = [[null,"不提醒"],[0,"开始时"],[5,"提前 5 分钟"],[10,"提前 10 分钟"],[15,"提前 15 分钟"],[30,"提前 30 分钟"],
+  [60,"提前 1 小时"],[120,"提前 2 小时"],[1440,"提前 1 天"],[2880,"提前 2 天"]];
+const ZONES = [["America/Los_Angeles","太平洋"],["America/Denver","山地"],["America/Phoenix","亚利桑那"],["America/Chicago","中部"],
+  ["America/New_York","东部"],["Pacific/Honolulu","夏威夷"],["America/Anchorage","阿拉斯加"],["Asia/Shanghai","北京"],
+  ["Asia/Tokyo","东京"],["Europe/London","伦敦"],["UTC","UTC"]];
+function zoneName(id, day) {
+  const name = ZONES.find(z => z[0] === id)?.[1] ?? id;
+  try {
+    const abbr = new Intl.DateTimeFormat("en-US",{ timeZone:id,timeZoneName:"short" }).formatToParts(new Date(day + "T12:00:00Z"))
+      .find(p => p.type === "timeZoneName")?.value ?? "";
+    return `${name} ${abbr}`;
+  } catch { return name; }
+}
+const openEventBoxes = new Set();
+const draftSummary = (d) => `${d.title} | ${d.allDay ? d.day + " all day" : `${d.day} ${d.start}-${d.end} ${d.timeZone}`} | ${d.location || "no location"} | calendar ${d.calendarId} | alert ${d.alertMinutes ?? "none"}`;
+function eventBox(r) {
+  const cals = r.calendars || [], drafts = r.drafts.map(d => ({ ...d }));
+  const box = el("div",{ class:"evbox" });
+  let state = "pending", status = null;
+  const cancelOthers = () => { for (const b of openEventBoxes) b.supersede(); openEventBoxes.clear(); };
+  cancelOthers();
+  box.supersede = () => { if (state === "pending") { state = "superseded"; draw(); } };
+  // What a follow-up ("改到 10 点") refers to: the drafts as they stand now, edits included.
+  box.summary = () => `\n[Event drafts, ${state === "added" ? "added to the calendar" : state === "pending" ? "awaiting confirmation"
+    : state === "queued" || state === "sending" ? "submitted, waiting for the Mac" : "not added"}]\n` + drafts.map(draftSummary).join("\n");
+  openEventBoxes.add(box);
+  const minutes = (t) => +t.slice(0,2) * 60 + +t.slice(3,5);
+  const hhmm = (m) => `${String(Math.floor(m / 60)).padStart(2,"0")}:${String(m % 60).padStart(2,"0")}`;
+  function draftNode(d) {
+    const cal = cals.find(c => c.id === d.calendarId);
+    const editable = state === "pending";
+    const opt = (v, text, on) => el("option",{ value:v ?? "", selected:on },text);
+    const node = el("div",{ class:"ev",style:cal?.color ? `--cal:${cal.color}` : null });
+    const title = el("textarea",{ rows:1,"aria-label":"标题",disabled:!editable });
+    title.value = d.title; title.oninput = () => { d.title = title.value; };
+    const date = el("input",{ type:"date",value:d.day,"aria-label":"日期",disabled:!editable,onchange:e => { d.day = e.target.value; draw(); } });
+    const allDay = el("input",{ type:"checkbox",checked:d.allDay,disabled:!editable,onchange:e => { d.allDay = e.target.checked; draw(); } });
+    const start = el("input",{ type:"time",value:d.start,"aria-label":"开始",disabled:!editable,onchange:e => {
+      const len = minutes(d.end) - minutes(d.start); d.start = e.target.value;
+      if (len > 0) d.end = hhmm(Math.min(minutes(d.start) + len, 23 * 60 + 59)); draw(); } });
+    const end = el("input",{ type:"time",value:d.end,"aria-label":"结束",disabled:!editable,onchange:e => { d.end = e.target.value; } });
+    const zones = ZONES.some(z => z[0] === d.timeZone) ? ZONES : [[d.timeZone,d.timeZone],...ZONES];
+    const zone = el("select",{ "aria-label":"时区",disabled:!editable,onchange:e => { d.timeZone = e.target.value; } },
+      ...zones.map(z => opt(z[0],zoneName(z[0],d.day),z[0] === d.timeZone)));
+    const loc = el("textarea",{ class:"loc",rows:1,placeholder:"没有地址","aria-label":"地址",disabled:!editable });
+    loc.value = d.location; loc.oninput = () => { d.location = loc.value; };
+    const calSel = el("select",{ "aria-label":"日历",disabled:!editable,onchange:e => { d.calendarId = e.target.value; draw(); } },
+      ...cals.map(c => opt(c.id,`${c.title} · ${c.source}`,c.id === d.calendarId)));
+    const alert = el("select",{ "aria-label":"提醒",disabled:!editable,onchange:e => { d.alertMinutes = e.target.value === "" ? null : Number(e.target.value); } },
+      ...ALERTS.map(a => opt(a[0],a[1],a[0] === d.alertMinutes)));
+    const row = (sym, label, ...kids) => el("div",{ class:"ev-row" },el("span",{ title:label,"aria-hidden":"true" },sym),...kids);
+    node.append(
+      el("div",{ class:"ev-title" },title,editable && drafts.length > 1
+        ? el("button",{ type:"button",class:"ev-x","aria-label":"不添加这一个",onclick:() => { drafts.splice(drafts.indexOf(d),1); draw(); } },"✕") : null),
+      el("hr"),
+      row("📅","日期",el("div",{ class:"pair" },date,el("label",{ class:"allday" },allDay,"全天"))),
+      d.allDay ? null : row("🕘","时间",el("div",{ class:"pair" },start,"–",end)),
+      d.allDay ? null : row("🌐","时区",zone),
+      row("📍","地址",loc),
+      row("🗂","日历",calSel),
+      row("🔔","提醒",alert),
+      d.notes ? row("📝","备注",(() => { const n = el("textarea",{ class:"loc",rows:1,disabled:!editable }); n.value = d.notes; n.oninput = () => { d.notes = n.value; }; return n; })()) : null);
+    if (d.alternatives?.length && editable) {
+      node.append(el("div",{ class:"ev-hist" },
+        d.basedOn ? "参考了历史 event，也可以换成：" : "历史里有相似的 event，点一下套用标题、地址和日历：",
+        el("div",{ class:"chips" },...d.alternatives.map(h => el("button",{ type:"button",
+          class:"chip" + (d.basedOn && d.basedOn.title === h.title && d.basedOn.calendarId === h.calendarId && d.basedOn.location === h.location ? " on" : ""),
+          onclick:() => { d.title = h.title; d.location = h.location; d.calendarId = h.calendarId; d.basedOn = h; draw(); } },
+          el("div",{},h.title),el("div",{ class:"muted" },[h.location ? h.location.slice(0,28) : null,h.calendar,`${h.count} 次`].filter(Boolean).join(" · ")))))));
+    }
+    if (!d.allDay && d.end <= d.start) node.append(el("div",{ class:"ev-warn" },"结束时间要晚于开始时间"));
+    return node;
+  }
+  async function submit() {
+    const bad = drafts.find(d => !d.title.trim() || !d.day || (!d.allDay && (!d.start || !d.end || d.end <= d.start)));
+    if (bad) { status = { kind:"bad",text:`「${bad.title || "未命名"}」的标题或时间不完整` }; draw(); return; }
+    state = "sending"; status = { kind:"wait",text:"正在提交…" }; draw();
+    try {
+      const res = await call({ action:"event_add",events:drafts.map(d => ({ title:d.title,location:d.location,notes:d.notes || "",
+        calendarId:d.calendarId,day:d.day,start:d.start,end:d.end,allDay:d.allDay,timeZone:d.timeZone,alertMinutes:d.alertMinutes })) });
+      state = "queued"; openEventBoxes.delete(box);
+      status = res.mac?.online ? { kind:"wait",text:"已发给 Mac，正在添加到日历…" } : { kind:"away",text:`⚠ ${res.message}` };
+      draw(); follow(res.id, Date.now());
+    } catch (err) { state = "pending"; status = { kind:"bad",text:err.message }; draw(); }
+  }
+  async function follow(id, since) {
+    const waited = Date.now() - since;
+    await new Promise(r => setTimeout(r, waited < 60_000 ? 2000 : 15_000));
+    let res;
+    try { res = await call({ action:"event_status",id }); } catch { return follow(id, since); }
+    if (res.status === "added") {
+      state = "added"; status = { kind:"good",text:"✓ 已添加到 Mac 的日历。大约 1–2 分钟后会经 iCloud 出现在 iPhone 上。" }; draw(); return;
+    }
+    if (res.status === "failed") { state = "failed"; status = { kind:"bad",text:`没有添加：${res.result}` }; draw(); return; }
+    if (!res.mac?.online) status = { kind:"away",text:`⚠ ${res.message}，Mac 醒来、打开 AutoReceipt 后会自动添加，不用在这里等。` };
+    else if (Date.now() - since > 30_000) status = { kind:"wait",text:"Mac 在线但还没处理完，请稍等…" };
+    draw();
+    if (Date.now() - since < 6 * 3600_000) follow(id, since);
+  }
+  function draw() {
+    const heads = { pending:`请确认 ${drafts.length} 个新 event（可直接修改）`, sending:"正在提交…", queued:`${drafts.length} 个新 event 已提交`,
+      added:`已添加 ${drafts.length} 个 event`, failed:"没有添加", cancelled:"已取消，没有添加", superseded:"已被下面新的草稿取代" };
+    box.classList.toggle("done",["added","cancelled","superseded"].includes(state));
+    box.replaceChildren(el("div",{ class:"ev-head" },heads[state]));
+    if (state !== "cancelled" && state !== "superseded") box.append(...drafts.map(draftNode));
+    if (status) box.append(el("div",{ class:"ev-status " + ({ good:"good",bad:"bad",away:"mac-away" }[status.kind] ?? "muted") },
+      status.kind === "wait" ? el("span",{ class:"spin" }) : null,status.text));
+    if (state === "pending") box.append(
+      el("div",{ class:"ev-actions" },
+        el("button",{ type:"button",class:"btn cancel",onclick:() => { state = "cancelled"; status = null; openEventBoxes.delete(box); draw(); } },"取消"),
+        el("button",{ type:"button",class:"btn",onclick:submit },`添加 ${drafts.length} 个到日历`)),
+      el("div",{ class:"ev-note" },"只会新建，不会修改或删除已有的 event"));
+  }
+  draw();
+  return box;
+}
+
 function replyBlock(r) {
   const box = el("div",{ class:"reply" },el("div",{ class:"bubble ai" },r.answer));
   if (r.scope) box.append(el("div",{ class:"scope" },r.scope));
+  if (r.drafts?.length) { r.events = eventBox(r); box.append(r.events); }
   const list = r.results || [];
   const draw = (all) => {
     box.querySelectorAll(".card,.more").forEach(n=>n.remove());
@@ -735,9 +894,12 @@ async function ask(text) {
   activeChat = request; $("q").value = ""; $("chatEmpty").classList.add("hidden");
   $("chatLog").append(el("div",{ class:"bubble me" },q),request.wait); setChatBusy(); toEnd();
   try {
-    const r = await call({ action:"chat",q,history:turns.slice() },{ signal:request.controller.signal });
+    // Drafted events go along as text, as they stand now, so "改到 10 点" knows what it changes.
+    const history = turns.map(t => ({ q:t.q,a:(t.a + (t.events ? t.events.summary() : "")).slice(0,1000) }));
+    const r = await call({ action:"chat",q,history },{ signal:request.controller.signal });
     if (activeChat !== request || request.controller.signal.aborted) return;
-    request.wait.replaceWith(replyBlock(r)); turns = [...turns,{ q,a:r.answer }].slice(-6);
+    request.wait.replaceWith(replyBlock(r));
+    turns = [...turns,{ q,a:r.answer,events:r.events }].slice(-6);
     if (r.onTopic) remember(q);
   } catch (err) {
     if (activeChat !== request || request.controller.signal.aborted) return;
@@ -906,6 +1068,7 @@ $("file").onchange = async e => {
       const r = await call({ action:"upload",image,fallbackDate:ymd(new Date(file.lastModified || Date.now())) });
       if (!r.ok) { box.replaceChildren(el("div",{},r.note || "没有识别到小票")); continue; }
       box.replaceChildren(el("div",{ class:"good" },"已上传"),el("div",{ class:"sub" },(r.receipts || []).map(x=>x.merchant).filter(Boolean).join("、") || "小票"),
+        macAwayLine(r.mac,"归档到 Mac 的 Receipt 文件夹"),
         el("button",{ class:"more",onclick:()=>pickMonth(r.date.slice(0,7),r.date) },`查看 ${r.date} 的小票`));
       await refreshLibrary({ day:r.date });
     } catch (err) { box.replaceChildren(el("span",{ class:"bad" },err.message)); }

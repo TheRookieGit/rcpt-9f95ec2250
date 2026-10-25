@@ -271,3 +271,58 @@ test('a receipt shows three items until tapped',async t=>{
   assert.equal(f.d.querySelectorAll('.paper .r-item').length,5);
   assert.equal(paper.getAttribute('aria-expanded'),'true');
 });
+
+test('drafted events are edited, queued for the Mac, and say when the Mac is away',async t=>{
+  let status='pending', mac={online:false,state:'sleeping',seenAt:new Date(Date.now()-10*60000).toISOString()};
+  const f=await fixture({handler(body){
+    if(body.action==='event_add') return response({id:7,mac,message:'Mac 正在睡眠（上次在线 10 分钟前），Mac 醒来并打开 AutoReceipt 后会自动添加，不用在这里等。'});
+    if(body.action==='event_status') return response({status,result:status==='added'?'SweetHoney Dessert':'',mac,message:''});
+  }});t.after(f.close);
+  f.d.querySelector('#tabs [data-tab="chat"]').click();
+  send(f,'周二 9 点半去 sweet honey');
+  await until(()=>f.chats.length===1);
+  const alt={title:'SweetHoney Dessert SLC',location:'',calendarId:'u',calendar:'Utah 2026',duration:45,timeZone:'',count:2,last:'2026-08-05'};
+  const based={title:'SweetHoney Dessert',location:'4284 Spring Mountain Rd',calendarId:'p',calendar:'Personal',duration:30,timeZone:'',count:1,last:'2026-09-01'};
+  f.chats[0].resolve(response({answer:'起草好了，请确认。',onTopic:true,scope:'待确认 1 个新 event · 日历',results:[],
+    calendars:[{id:'p',title:'Personal',source:'iCloud',color:'#1BADF8'},{id:'u',title:'Utah 2026',source:'iCloud',color:'#63DA38'}],
+    drafts:[{title:'SweetHoney Dessert',location:'4284 Spring Mountain Rd',calendarId:'p',day:'2026-10-27',start:'09:30',end:'10:00',allDay:false,
+      timeZone:'America/Los_Angeles',alertMinutes:null,notes:'',basedOn:based,alternatives:[based,alt]}]}));
+  await until(()=>f.d.querySelector('.evbox .ev'));
+  const box=f.d.querySelector('.evbox');
+  assert.match(box.textContent,/请确认 1 个新 event/);
+  assert.equal(box.querySelector('select[aria-label="日历"]').value,'p');
+  assert.equal(box.querySelector('select[aria-label="提醒"]').value,'','No alert by default');
+  // Switching to the other past event takes its title and calendar; moving the start keeps the length.
+  [...box.querySelectorAll('.ev-hist .chip')].find(b=>b.textContent.includes('SLC')).click();
+  const ev=()=>f.d.querySelector('.evbox .ev');
+  assert.equal(ev().querySelector('textarea').value,'SweetHoney Dessert SLC');
+  assert.equal(ev().querySelector('select[aria-label="日历"]').value,'u');
+  const start=ev().querySelector('input[aria-label="开始"]'); start.value='14:00'; start.dispatchEvent(new f.w.Event('change'));
+  assert.equal(ev().querySelector('input[aria-label="结束"]').value,'14:30');
+  const alert=ev().querySelector('select[aria-label="提醒"]'); alert.value='15'; alert.dispatchEvent(new f.w.Event('change'));
+  [...f.d.querySelectorAll('.evbox .btn')].find(b=>b.textContent.startsWith('添加')).click();
+  await until(()=>f.requests.some(r=>r.action==='event_add'));
+  const sent=f.requests.find(r=>r.action==='event_add').events[0];
+  assert.deepEqual({t:sent.title,c:sent.calendarId,s:sent.start,e:sent.end,a:sent.alertMinutes,z:sent.timeZone},
+    {t:'SweetHoney Dessert SLC',c:'u',s:'14:00',e:'14:30',a:15,z:'America/Los_Angeles'});
+  await until(()=>/Mac 正在睡眠/.test(f.d.querySelector('.evbox').textContent));
+  assert.equal(f.d.querySelector('.evbox .ev textarea').disabled,true,'Submitted drafts are no longer editable');
+  // The follow-up question carries the drafts, so "改到 10 点" knows what it changes.
+  status='added'; mac={online:true,state:'online',seenAt:new Date().toISOString()};
+  for(let n=0;n<400 && !/已添加到 Mac 的日历/.test(f.d.querySelector('.evbox').textContent);n++) await sleep(10);
+  assert.match(f.d.querySelector('.evbox').textContent,/已添加 1 个 event/);
+  send(f,'改到 10 点');
+  await until(()=>f.chats.length===2);
+  assert.match(f.chats[1].body.history[0].a,/Event drafts[\s\S]*SweetHoney Dessert SLC \| 2026-10-27 14:00-14:30/);
+});
+
+test('changes from the phone say when the Mac cannot pick them up now',async t=>{
+  const away={online:false,state:'quit',seenAt:new Date(Date.now()-3*3600000).toISOString()};
+  const f=await fixture({handler(body,_,state){
+    if(body.action==='edit_receipt'){state.records.find(r=>r.id===body.id).date=body.date;return response({ok:true,mac:away});}
+  }});t.after(f.close);
+  f.d.querySelector('.receipt-card .r-acts button[title="修改日期"]').click();
+  input(f,'receiptDate','2026-10-09');
+  f.d.getElementById('dateForm').requestSubmit();
+  await until(()=>/Mac 上的 AutoReceipt 已退出（上次在线 3 小时前）/.test(f.d.getElementById('notice').textContent));
+});
