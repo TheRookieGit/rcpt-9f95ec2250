@@ -344,7 +344,7 @@ test('food tab rolls among places in the last city eaten in, honours filters, an
   f.d.querySelector('#tabs [data-tab="food"]').click();
   await until(()=>f.d.getElementById('foodRoll'));
   const on=()=>[...f.d.querySelectorAll('#foodBody .fchip.on')].map(b=>b.textContent);
-  assert.deepEqual(on(),['Las Vegas','随便','都行']);
+  assert.deepEqual(on(),['Las Vegas','随便','不限','都行']);
   assert.match(f.d.querySelector('.pool-note').textContent,/符合条件的有 2 家/);
   [...f.d.querySelectorAll('#foodBody .fchip')].find(b=>b.textContent==='🧊 冰冰凉').click();
   assert.match(f.d.querySelector('.pool-note').textContent,/符合条件的有 1 家/);
@@ -363,6 +363,14 @@ test('food tab rolls among places in the last city eaten in, honours filters, an
   click(f,'foodRoll');
   await until(()=>f.d.querySelector('.pick-card .nm')?.textContent==='Taste');
   assert.match(f.d.querySelector('.pick-card .st').textContent,/吃过 2 次/);
+  assert.match(f.d.querySelector('.pick-card .st').textContent,/一般每次 \$24\.06/);
+  const chip=(t)=>[...f.d.querySelectorAll('#foodBody .fchip')].find(b=>b.textContent===t);
+  chip('$50–100').click();
+  assert.match(f.d.querySelector('.pool-note').textContent,/符合条件的有 0 家/);
+  chip('$50 以内').click();
+  assert.match(f.d.querySelector('.pool-note').textContent,/符合条件的有 1 家/);
+  assert.deepEqual(JSON.parse(f.w.localStorage.getItem('food')).prices.sort(),['low','mid']);
+  chip('不限').click();
   f.d.querySelector('.pick-card .more').click();
   const visits=[...f.d.querySelectorAll('#foodBody .visit')];
   assert.equal(visits.length,2);

@@ -1435,13 +1435,22 @@ $("moreReload").onclick = loadMore;
 
 /* 今天吃什么: the places the Mac found in MoneyWiz, the receipts and the calendar; the roll happens here. */
 const CUISINES = ["中餐","火锅","韩餐","日料","东南亚","美式","快餐","墨西哥","西餐","甜品饮品","其他"];
+const PRICES = [["low","$50 以内"],["mid","$50–100"],["high","$100 以上"]];
+// What a visit usually costs: the median of the visits with an amount. Mirrors FoodCatalog.Place.typical.
+function typical(p) {
+  const paid = p.visits.map(v => v.amount).filter(a => a > 0).sort((a, b) => a - b);
+  if (!paid.length) return null;
+  const mid = paid.length >> 1;
+  return paid.length % 2 ? paid[mid] : (paid[mid - 1] + paid[mid]) / 2;
+}
+const bracket = (a) => a < 50 ? "low" : a <= 100 ? "mid" : "high";
 const FOOD_EMOJI = { 中餐:"🥟",火锅:"🍲",韩餐:"🥘",日料:"🍣",东南亚:"🍜",美式:"🍔",快餐:"🍟",墨西哥:"🌮",西餐:"🍝",甜品饮品:"🧋",其他:"🍽️" };
 let foodCat = null, foodAt = null, foodError = null, foodLoading = null;
 let foodPick = null, foodRolling = false, foodVisits = false, foodOpen = null, foodFresh = false;
 const savedFood = (() => { try { return JSON.parse(store.get("food") || "{}"); } catch { return {}; } })();
 // area: undefined = where you ate last, null = anywhere.
-const foodF = { area: savedFood.area, cuisines: new Set(savedFood.cuisines || []), temp: savedFood.temp ?? null };
-const saveFood = () => store.set("food",JSON.stringify({ area: foodF.area, cuisines: [...foodF.cuisines], temp: foodF.temp }));
+const foodF = { area: savedFood.area, cuisines: new Set(savedFood.cuisines || []), temp: savedFood.temp ?? null, prices: new Set(savedFood.prices || []) };
+const saveFood = () => store.set("food",JSON.stringify({ area: foodF.area, cuisines: [...foodF.cuisines], temp: foodF.temp, prices: [...foodF.prices] }));
 function foodAreas(c) {
   const n = new Map();
   for (const p of c.places) if (p.area) n.set(p.area,(n.get(p.area) || 0) + p.visits.length);
@@ -1457,7 +1466,8 @@ function foodPool() {
   if (!foodCat) return [];
   const area = foodArea();
   return foodCat.places.filter(p => (!area || p.area === area) && (!foodF.cuisines.size || foodF.cuisines.has(p.cuisine))
-    && (!foodF.temp || p.temp === foodF.temp || p.temp === "都有"));
+    && (!foodF.temp || p.temp === foodF.temp || p.temp === "都有")
+    && (!foodF.prices.size || (typical(p) != null && foodF.prices.has(bracket(typical(p))))));
 }
 function loadFood(force = false) {
   if (foodLoading) return foodLoading;
@@ -1487,6 +1497,8 @@ function drawFood() {
       fchip("哪都行",!area,set(() => { foodF.area = null; }))]),
     frow("🍴 想吃啥",[fchip("随便",!foodF.cuisines.size,set(() => foodF.cuisines.clear())),
       ...CUISINES.map(c => fchip(`${FOOD_EMOJI[c]} ${c}`,foodF.cuisines.has(c),set(() => { foodF.cuisines.has(c) ? foodF.cuisines.delete(c) : foodF.cuisines.add(c); })))]),
+    frow("💰 花多少（按平时每次）",[fchip("不限",!foodF.prices.size,set(() => foodF.prices.clear())),
+      ...PRICES.map(([k, t]) => fchip(t,foodF.prices.has(k),set(() => { foodF.prices.has(k) ? foodF.prices.delete(k) : foodF.prices.add(k); })))]),
     frow("🌡️ 冷的热的",[fchip("都行",!foodF.temp,set(() => { foodF.temp = null; })),
       fchip("🔥 热乎的",foodF.temp === "热",set(() => { foodF.temp = "热"; })),
       fchip("🧊 冰冰凉",foodF.temp === "冷",set(() => { foodF.temp = "冷"; }))]),
@@ -1504,7 +1516,8 @@ function drawFood() {
 function pickCard(p) {
   const last = p.visits[0], total = p.visits.reduce((s, v) => s + v.amount,0);
   const days = last ? Math.round((Date.parse(ymd(new Date()) + "T00:00:00Z") - Date.parse(last.date + "T00:00:00Z")) / 86400000) : 0;
-  const stat = [`吃过 ${p.visits.length} 次`,last && `上次 ${last.date}（${days > 0 ? days + " 天前" : "今天"}）`,total > 0 && `一共 ${usd(total)}`].filter(Boolean).join(" · ");
+  const usual = typical(p);
+  const stat = [`吃过 ${p.visits.length} 次`,last && `上次 ${last.date}（${days > 0 ? days + " 天前" : "今天"}）`,usual != null && `一般每次 ${usd(usual)}`,total > 0 && `一共 ${usd(total)}`].filter(Boolean).join(" · ");
   // The pop and sparkles play once, when the pick lands, not on every redraw.
   const fresh = foodFresh; foodFresh = false;
   const card = el("div",{ class:"pick-card" + (fresh ? " fresh" : "") },
