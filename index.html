@@ -428,76 +428,6 @@
   .ev-note { font-size: 12px; color: var(--faint); text-align: right; }
   .ev-status { font-size: 14px; display: flex; gap: 6px; align-items: flex-start; }
   .mac-away { font-size: 13px; color: #b45309; margin-top: 4px; }
-
-  /* 今天吃什么: filters, a little card shuffle, and the place it lands on. Mirrors FoodRollView on the Mac. */
-  :root { --food: #f2564f; --food-soft: rgba(242, 86, 79, .13); }
-  @media (prefers-color-scheme: dark) { :root { --food: #ff6b63; --food-soft: rgba(255, 107, 99, .16); } }
-  body[data-tab="food"] #paneFood { display: block; }
-  .food-btn { background: var(--food); color: #fff; font-weight: 650; font-size: 14px; padding: 8px 14px; border-radius: 999px; white-space: nowrap; }
-  .food-btn:active { opacity: .85; }
-  .tabs button[data-tab="food"].on { color: var(--food); }
-  .frow { margin: 0 0 12px; }
-  .frow > small { display: block; font-size: 12px; font-weight: 600; color: var(--muted); margin: 0 2px 6px; }
-  .fchips { display: flex; flex-wrap: wrap; gap: 6px; }
-  .fchip { padding: 7px 12px; border-radius: 999px; background: var(--surface-2); font-size: 13.5px; transition: background .15s, color .15s, transform .15s; }
-  .fchip.on { background: var(--food); color: #fff; font-weight: 600; }
-  .fchip:active { transform: scale(.94); }
-  .stage { position: relative; height: 250px; border-radius: 24px; overflow: hidden; display: grid; place-items: center;
-    background: linear-gradient(135deg, var(--food-soft), rgba(251, 146, 60, .12)); margin: 6px 0 12px; }
-  .stage .idle { text-align: center; color: var(--muted); font-size: 14px; }
-  .stage .bowl { font-size: 64px; display: inline-block; animation: bob 1.8s ease-in-out infinite; }
-  @keyframes bob { 0%, 100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(-8px) rotate(2deg); } }
-  .scard { position: absolute; left: 50%; top: 50%; width: 104px; height: 134px; margin: -67px 0 0 -52px; border-radius: 16px;
-    background: var(--paper); box-shadow: 0 4px 14px rgba(0, 0, 0, .16); display: grid; place-items: center; font-size: 42px;
-    transition: transform .22s cubic-bezier(.3, 1.6, .5, 1); }
-  .pick-card { text-align: center; padding: 14px; }
-  .pick-card.fresh { animation: pop .55s cubic-bezier(.3, 1.6, .5, 1) both; }
-  @keyframes pop { from { transform: scale(.55); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-  .pick-card .em { font-size: 46px; display: inline-block; }
-  .pick-card.fresh .em { animation: wiggle .6s ease-out both .1s; }
-  @keyframes wiggle { 0% { transform: scale(1.3) rotate(-12deg); } 60% { transform: scale(.95) rotate(6deg); } 100% { transform: none; } }
-  .pick-card .nm { font-size: 23px; font-weight: 800; letter-spacing: -.01em; margin: 4px 0 6px; overflow-wrap: anywhere; }
-  .pick-card .tg { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
-  .pick-card .tg span { font-size: 12px; padding: 3px 9px; border-radius: 999px; background: color-mix(in srgb, var(--text) 7%, transparent); }
-  .pick-card .st { font-size: 13px; color: var(--muted); margin-top: 8px; }
-  .pick-card .more { color: var(--food); margin-top: 6px; font-size: 13.5px; }
-  .spark { position: absolute; left: 50%; top: 50%; font-size: 16px; pointer-events: none; animation: burst .9s ease-out both; }
-  @keyframes burst { from { transform: translate(-50%, -50%) scale(.4); opacity: 1; } to { transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y))) scale(1.3); opacity: 0; } }
-  .verdict { display: inline-block; margin-top: 8px; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; color: #fff; background: #dc3340; }
-.verdict.black { background: #3a3a3c; }
-  .verdict.mixed { background: #b8731a; }
-  .vcomment { font-size: 12.5px; color: var(--muted); margin: 5px 8px 0; white-space: pre-wrap; overflow-wrap: anywhere; }
-  .pick-card .acts { display: flex; gap: 16px; justify-content: center; }
-  .fedit { background: var(--surface-2); border-radius: 16px; padding: 14px; margin: 0 0 12px; display: grid; gap: 10px; }
-  .fedit h3 { margin: 0; font-size: 15px; }
-  .fedit label { display: grid; grid-template-columns: 52px 1fr; align-items: center; gap: 8px; font-size: 14px; color: var(--muted); }
-  .fedit input[type=text], .fedit select { font: inherit; font-size: 16px; color: var(--text); background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; min-height: 40px; width: 100%; min-width: 0; }
-  .fedit label.check { display: flex; gap: 8px; color: var(--text); }
-  .fedit .hint { margin: 0; }
-  .fedit .row { display: flex; justify-content: flex-end; gap: 8px; }
-  .fedit .row .btn { padding: 10px 16px; }
-  .fedit .row .cancel { background: var(--surface); color: var(--text); border: 1px solid var(--line); }
-  .fedit .row .save { background: var(--food); color: #fff; }
-  .roll { width: 100%; background: var(--food); color: #fff; font-weight: 750; font-size: 17px; padding: 15px; border-radius: 18px; box-shadow: 0 6px 18px var(--food-soft); }
-  .roll:active { transform: scale(.98); }
-  .roll:disabled { opacity: .45; }
-  .pool-note { text-align: center; font-size: 12px; color: var(--faint); margin: 8px 0 14px; }
-  .visit { display: flex; gap: 8px; align-items: center; width: 100%; text-align: left; padding: 10px 12px; border-radius: 12px; background: var(--surface-2); margin: 0 0 6px; font-size: 14px; }
-  .visit .vd { font-family: var(--mono); font-size: 13px; }
-  .visit .ve { flex: 1; min-width: 0; color: var(--muted); font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .visit .va { font-weight: 650; font-variant-numeric: tabular-nums; }
-  .visit-receipts { display: grid; gap: 8px; margin: 2px 0 10px; }
-  @media (prefers-reduced-motion: reduce) { .stage .bowl, .pick-card, .pick-card .em, .spark { animation: none; } .scard { transition: none; } }
-  @media (min-width: 1000px) {
-    body[data-tab="food"] #paneFood { display: flex; grid-column: 2; grid-row: 1; }
-  }
-  @media (min-width: 1360px) {
-    body[data-tab] #paneFood { display: none; }
-    body[data-tab][data-food] #paneFood {
-      display: flex; position: fixed; z-index: 40; top: 64px; right: 24px; width: min(540px, calc(100vw - 48px)); max-height: calc(100dvh - 88px);
-      box-shadow: 0 0 0 100vmax rgba(0, 0, 0, .35), 0 20px 60px rgba(0, 0, 0, .3);
-    }
-  }
 </style>
 </head>
 <body>
@@ -517,7 +447,6 @@
     <header class="app-head">
       <h1>小票工作台</h1>
       <span id="libraryCount" class="badge num">小票库</span>
-      <button id="foodBtn" class="food-btn d-only" type="button" aria-controls="paneFood" aria-expanded="false">🎲 今天吃什么</button>
       <button id="moreBtn" class="quiet d-only" type="button" aria-controls="paneMore" aria-expanded="false">对账与规则</button>
       <button id="refresh" class="quiet" type="button">刷新</button>
     </header>
@@ -582,10 +511,6 @@
         <div class="panel-head"><span class="mark" aria-hidden="true">◔</span><h2 id="budgetTitle">预算</h2><button class="quiet" id="budgetReload" type="button">刷新</button></div>
         <div id="budgetBody" class="pane-body center-scroll"></div>
       </section>
-      <section id="paneFood" class="panel" aria-labelledby="foodTitle">
-        <div class="panel-head"><span class="mark" aria-hidden="true" style="background:var(--food-soft)">🎲</span><h2 id="foodTitle">今天吃什么</h2><button class="quiet" id="foodReload" type="button">刷新</button><button class="quiet d-only" id="foodClose" type="button" aria-label="关闭">关闭</button></div>
-        <div id="foodBody" class="pane-body center-scroll"></div>
-      </section>
       <section id="paneMore" class="panel" aria-labelledby="moreTitle">
         <div class="panel-head"><span class="mark" aria-hidden="true">⋯</span><h2 id="moreTitle">对账与规则</h2><button class="quiet" id="moreReload" type="button">刷新</button><button class="quiet d-only" id="moreClose" type="button" aria-label="关闭">关闭</button></div>
         <div id="moreBody" class="pane-body center-scroll"></div>
@@ -598,7 +523,6 @@
       <button type="button" data-tab="tx" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M3 10h18M7 15h4"/></svg><span>交易</span></button>
       <button type="button" data-tab="share" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 12V4"/><path d="M12 12l5.5 5.5"/></svg><span>分摊</span></button>
       <button type="button" data-tab="budget" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/></svg><span>预算</span></button>
-      <button type="button" data-tab="food" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11h16a8 8 0 0 1-16 0z"/><path d="M8 8c0-1.5 1-2 1-3.5M12 8c0-1.5 1-2 1-3.5M16 8c0-1.5 1-2 1-3.5"/></svg><span>吃什么</span></button>
       <button type="button" data-tab="chat" aria-selected="false" class="m-only"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-7l-5 4v-4H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/></svg><span>对话</span></button>
       <button type="button" data-tab="more" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/></svg><span>更多</span></button>
     </nav>
@@ -1151,7 +1075,7 @@ $("file").onchange = async e => {
   }
 };
 /* Tabs: on a phone every section is a tab; wide screens keep archive and chat beside the selected tab. */
-const TABS = ["upload","browse","tx","share","budget","food","chat","more"];
+const TABS = ["upload","browse","tx","share","budget","chat","more"];
 const wideQuery = typeof window.matchMedia === "function" ? window.matchMedia("(min-width: 1000px)") : null;
 const deskQuery = typeof window.matchMedia === "function" ? window.matchMedia("(min-width: 1360px)") : null;
 const loaded = {};
@@ -1174,7 +1098,6 @@ function ensureLoaded(name) {
   if (name === "tx") { loaded.tx = true; openTx(); }
   else if (name === "share" || name === "budget") { loaded.share = loaded.share ?? true; loadShare(); }
   else if (name === "more") { loaded.more = true; loadMore(); }
-  else if (name === "food") { loaded.food = true; loadFood(); }
 }
 document.querySelectorAll("#tabs button").forEach(b => b.onclick = () => setTab(b.dataset.tab));
 wideQuery?.addEventListener?.("change", () => setTab(tab));
@@ -1188,23 +1111,12 @@ function setMore(open) {
   else delete document.body.dataset.more;
   $("moreBtn").setAttribute("aria-expanded",String(open));
 }
-$("moreBtn").onclick = e => { e.stopPropagation(); setFood(false); setMore(!("more" in document.body.dataset)); };
-// On the desktop layout the roll opens over the workspace from the red header button, as on the Mac.
-function setFood(open) {
-  if (open) { document.body.dataset.food = ""; ensureLoaded("food"); }
-  else delete document.body.dataset.food;
-  $("foodBtn").setAttribute("aria-expanded",String(open));
-}
-$("foodBtn").onclick = e => { e.stopPropagation(); setMore(false); setFood(!("food" in document.body.dataset)); };
-$("foodClose").onclick = () => { setFood(false); $("foodBtn").focus(); };
-$("paneFood").addEventListener("click",e => e.stopPropagation());
-document.addEventListener("click",() => { if ("food" in document.body.dataset) setFood(false); });
-document.addEventListener("keydown",e => { if (e.key === "Escape" && "food" in document.body.dataset && !document.querySelector("dialog[open]")) setFood(false); });
+$("moreBtn").onclick = e => { e.stopPropagation(); setMore(!("more" in document.body.dataset)); };
 $("moreClose").onclick = () => { setMore(false); $("moreBtn").focus(); };
 $("paneMore").addEventListener("click",e => e.stopPropagation());
 document.addEventListener("click",() => { if ("more" in document.body.dataset) setMore(false); });
 document.addEventListener("keydown",e => { if (e.key === "Escape" && "more" in document.body.dataset && !document.querySelector("dialog[open]")) setMore(false); });
-deskQuery?.addEventListener?.("change", () => { placeCalendar(); if (!deskQuery.matches) { setMore(false); setFood(false); } setTab(tab); });
+deskQuery?.addEventListener?.("change", () => { placeCalendar(); if (!deskQuery.matches) setMore(false); setTab(tab); });
 placeCalendar();
 
 /* Shared helpers for the read-only panes */
@@ -1447,234 +1359,13 @@ async function loadMore() {
   box.replaceChildren(...nodes);
 }
 $("moreReload").onclick = loadMore;
-
-/* 今天吃什么: the places the Mac found in MoneyWiz, the receipts and the calendar; the roll happens here. */
-const CUISINES = ["中餐","火锅","韩餐","日料","东南亚","美式","快餐","墨西哥","西餐","甜品饮品","其他"];
-const PRICES = [["low","$50 以内"],["mid","$50–100"],["high","$100 以上"]];
-// What a visit usually costs: the median of the visits with an amount. Mirrors FoodCatalog.Place.typical.
-function typical(p) {
-  const paid = p.visits.map(v => v.amount).filter(a => a > 0).sort((a, b) => a - b);
-  if (!paid.length) return null;
-  const mid = paid.length >> 1;
-  return paid.length % 2 ? paid[mid] : (paid[mid - 1] + paid[mid]) / 2;
-}
-const bracket = (a) => a < 50 ? "low" : a <= 100 ? "mid" : "high";
-const FOOD_EMOJI = { 中餐:"🥟",火锅:"🍲",韩餐:"🥘",日料:"🍣",东南亚:"🍜",美式:"🍔",快餐:"🍟",墨西哥:"🌮",西餐:"🍝",甜品饮品:"🧋",其他:"🍽️" };
-let foodCat = null, foodBase = null, foodPending = [], foodAt = null, foodError = null, foodLoading = null;
-let foodPick = null, foodRolling = false, foodVisits = false, foodOpen = null, foodFresh = false, foodEditing = false, foodSaving = false;
-// Corrections the Mac has not taken in yet, applied on top of its catalog as it would (see FoodRoll.catalog).
-function withPending(cat, pending) {
-  if (!cat || !pending.length) return cat;
-  const byId = new Map(), places = [];
-  for (const original of cat.places) {
-    let p = { ...original, visits: [...original.visits], sources: [...(original.sources || [])] };
-    for (const e of pending) {
-      if (!e.sources?.some(x => p.sources.includes(x))) continue;
-      if (e.hidden) { p = null; break; }
-      for (const k of ["name","area","cuisine","temp"]) if (e[k]) p[k] = e[k];
-    }
-    if (!p) continue;
-    const id = (p.name + "|" + p.area).toLowerCase(), same = byId.get(id);
-    if (!same) { p.id = id; byId.set(id,p); places.push(p); continue; }
-    const days = new Map(same.visits.map(v => [v.date,{ ...v }]));
-    for (const v of p.visits) {
-      const d = days.get(v.date);
-      if (d) { d.amount += v.amount; d.receipts = [...d.receipts,...v.receipts]; d.sources = [...new Set([...d.sources,...v.sources])]; d.events = [...d.events,...v.events]; }
-      else days.set(v.date,{ ...v });
-    }
-    same.visits = [...days.values()].sort((a, b) => b.date.localeCompare(a.date));
-    same.sources.push(...p.sources);
-    same.verdict ??= p.verdict; same.comment ??= p.comment; same.listName ??= p.listName;
-  }
-  return { ...cat, places };
-}
-const followPick = () => { if (foodPick) foodPick = foodCat?.places.find(p => p.sources?.some(x => foodPick.sources?.includes(x))) || null; };
-const savedFood = (() => { try { return JSON.parse(store.get("food") || "{}"); } catch { return {}; } })();
-// area: undefined = where you ate last, null = anywhere.
-const foodF = { area: savedFood.area, cuisines: new Set(savedFood.cuisines || []), temp: savedFood.temp ?? null, prices: new Set(savedFood.prices || []) };
-const saveFood = () => store.set("food",JSON.stringify({ area: foodF.area, cuisines: [...foodF.cuisines], temp: foodF.temp, prices: [...foodF.prices] }));
-function foodAreas(c) {
-  const n = new Map();
-  for (const p of c.places) if (p.area) n.set(p.area,(n.get(p.area) || 0) + p.visits.length);
-  return [...n].sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1)).map(x => x[0]);
-}
-function currentArea(c) {
-  let best = null;
-  for (const p of c.places) if (p.area && (!best || (p.visits[0]?.date || "") > (best.visits[0]?.date || ""))) best = p;
-  return best?.area ?? null;
-}
-const foodArea = () => foodF.area === undefined ? currentArea(foodCat) : foodF.area;
-function foodPool() {
-  if (!foodCat) return [];
-  const area = foodArea();
-  return foodCat.places.filter(p => (!area || p.area === area) && (!foodF.cuisines.size || foodF.cuisines.has(p.cuisine))
-    && (!foodF.temp || p.temp === foodF.temp || p.temp === "都有")
-    && (!foodF.prices.size || (typical(p) != null && foodF.prices.has(bracket(typical(p))))));
-}
-function loadFood(force = false) {
-  if (foodLoading) return foodLoading;
-  if (foodCat && !force) { drawFood(); return Promise.resolve(); }
-  $("foodBody").replaceChildren(loadingBox());
-  foodLoading = (async () => {
-    try {
-      const r = await call({ action:"food_get" });
-      foodBase = r.catalog || null; foodPending = r.pending || []; foodCat = withPending(foodBase,foodPending);
-      foodAt = r.updatedAt || null; foodError = null; followPick();
-    }
-    catch (err) { foodError = err; }
-    finally { foodLoading = null; }
-    drawFood();
-  })();
-  return foodLoading;
-}
-const fchip = (text, on, onclick) => el("button",{ type:"button",class:"fchip" + (on ? " on" : ""),"aria-pressed":String(on),onclick },text);
-function frow(title, chips) { return el("div",{ class:"frow" },el("small",{},title),el("div",{ class:"fchips" },chips)); }
-function drawFood() {
-  const box = $("foodBody");
-  if (foodError) { box.replaceChildren(errorBox(foodError,() => loadFood(true))); return; }
-  if (!foodCat || !foodCat.places?.length) {
-    box.replaceChildren(el("div",{ class:"empty" },"Mac 还没有整理出吃过的店。",el("br"),"在 Mac 上点右上角红色的「今天吃什么」，整理完会同步到这里。"));
-    return;
-  }
-  const area = foodArea(), pool = foodPool();
-  const set = (fn) => () => { fn(); saveFood(); drawFood(); };
-  const nodes = [
-    frow("📍 在哪儿",[...foodAreas(foodCat).slice(0,8).map(a => fchip(a,area === a,set(() => { foodF.area = a; }))),
-      fchip("哪都行",!area,set(() => { foodF.area = null; }))]),
-    frow("🍴 想吃啥",[fchip("随便",!foodF.cuisines.size,set(() => foodF.cuisines.clear())),
-      ...CUISINES.map(c => fchip(`${FOOD_EMOJI[c]} ${c}`,foodF.cuisines.has(c),set(() => { foodF.cuisines.has(c) ? foodF.cuisines.delete(c) : foodF.cuisines.add(c); })))]),
-    frow("💰 花多少（按平时每次）",[fchip("不限",!foodF.prices.size,set(() => foodF.prices.clear())),
-      ...PRICES.map(([k, t]) => fchip(t,foodF.prices.has(k),set(() => { foodF.prices.has(k) ? foodF.prices.delete(k) : foodF.prices.add(k); })))]),
-    frow("🌡️ 冷的热的",[fchip("都行",!foodF.temp,set(() => { foodF.temp = null; })),
-      fchip("🔥 热乎的",foodF.temp === "热",set(() => { foodF.temp = "热"; })),
-      fchip("🧊 冰冰凉",foodF.temp === "冷",set(() => { foodF.temp = "冷"; }))]),
-  ];
-  const stage = el("div",{ class:"stage",id:"foodStage" });
-  const editor = foodPick && foodEditing ? editForm(foodPick) : null;
-  if (foodPick) stage.append(pickCard(foodPick));
-  else stage.append(el("div",{ class:"idle" },el("div",{ class:"bowl" },"🍚"),el("div",{},pool.length ? "肚子饿了？点下面抽一家" : "这样筛就没有店啦，放宽一点试试")));
-  nodes.push(stage,editor,
-    el("button",{ type:"button",class:"roll",id:"foodRoll",disabled:!pool.length || foodRolling,onclick:rollFood },foodPick ? "🎲  再抽一次" : "🎲  抽一家！"),
-    el("p",{ class:"pool-note" },`符合条件的有 ${pool.length} 家 · 一共 ${foodCat.places.length} 家吃过的店`));
-  if (foodPick && foodVisits) nodes.push(visitList(foodPick));
-  nodes.push(el("p",{ class:"hint" },foodAt ? `Mac 上次整理：${relTime(foodAt)}。` : "","来自 MoneyWiz、小票和日历；菜系、冷热和城市由 AI 判断。"));
-  box.replaceChildren(...nodes);
-}
-function pickCard(p) {
-  const last = p.visits[0], total = p.visits.reduce((s, v) => s + v.amount,0);
-  const days = last ? Math.round((Date.parse(ymd(new Date()) + "T00:00:00Z") - Date.parse(last.date + "T00:00:00Z")) / 86400000) : 0;
-  const usual = typical(p);
-  const stat = !p.visits.length ? `还没吃过 · 在备忘录「LV 饮食」里` : [`吃过 ${p.visits.length} 次`,last && `上次 ${last.date}（${days > 0 ? days + " 天前" : "今天"}）`,usual != null && `一般每次 ${usd(usual)}`,total > 0 && `一共 ${usd(total)}`].filter(Boolean).join(" · ");
-  // The pop and sparkles play once, when the pick lands, not on every redraw.
-  const fresh = foodFresh; foodFresh = false;
-  const card = el("div",{ class:"pick-card" + (fresh ? " fresh" : "") },
-    el("div",{ class:"em" },FOOD_EMOJI[p.cuisine] || "🍽️"),
-    el("div",{ class:"nm" },p.name),
-    el("div",{ class:"tg" },[p.area && el("span",{},"📍 " + p.area),el("span",{},p.cuisine),p.temp === "冷" ? el("span",{},"🧊 冷") : p.temp === "热" ? el("span",{},"🔥 热") : null]),
-    el("div",{ class:"st" },stat),
-    p.verdict && el("div",{},el("span",{ class:"verdict " + p.verdict },{ red:"👍 红榜",black:"👎 黑榜",mixed:"👍👎 红黑榜都有" }[p.verdict])),
-    p.verdict && p.comment && el("div",{ class:"vcomment" },(p.listName ? `「${p.listName}」` : "") + p.comment),
-    el("div",{ class:"acts" },
-      p.visits.length ? el("button",{ type:"button",class:"more","aria-expanded":String(foodVisits),onclick:() => { foodVisits = !foodVisits; drawFood(); } },foodVisits ? "收起 ▴" : "看看以前哪天吃的 ▾") : null,
-      el("button",{ type:"button",class:"more",id:"foodEdit","aria-expanded":String(foodEditing),onclick:() => { foodEditing = !foodEditing; drawFood(); } },"✏️ 改一改")));
-  const frag = document.createDocumentFragment(); frag.append(card);
-  if (fresh) ["✨","⭐️","💫","✨","⭐️","💫","✨"].forEach((s, i) => {
-    const a = i / 7 * 2 * Math.PI;
-    frag.append(el("span",{ class:"spark","aria-hidden":"true",style:`--x:${Math.round(Math.cos(a) * 150)}px;--y:${Math.round(Math.sin(a) * 95)}px` },s));
-  });
-  return frag;
-}
-async function rollFood() {
-  const pool = foodPool();
-  if (!pool.length || foodRolling) return;
-  const previous = foodPick;
-  foodRolling = true; foodPick = null; foodVisits = false; foodOpen = null; foodEditing = false; drawFood();
-  const stage = $("foodStage"), emojis = pool.slice(0,12).map(p => FOOD_EMOJI[p.cuisine] || "🍽️");
-  const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-  if (!reduce) {
-    const cards = [0,1,2].map(() => el("div",{ class:"scard","aria-hidden":"true" }));
-    stage.replaceChildren(...cards);
-    for (let step = 0; step < 9; step++) {
-      cards.forEach((c, i) => {
-        const slot = (i + step) % 3;
-        c.textContent = emojis[(i + step) % emojis.length];
-        c.style.transform = `translate(${(slot - 1) * 70}px, ${slot === 1 ? -14 : 6}px) rotate(${(slot - 1) * 12}deg)`;
-        c.style.zIndex = slot === 1 ? 2 : 0;
-      });
-      await new Promise(r => setTimeout(r,90 + step * 18));
-    }
-  }
-  const others = pool.length > 1 ? pool.filter(p => p.id !== previous?.id) : pool;
-  foodPick = others[Math.floor(Math.random() * others.length)];
-  foodRolling = false; foodFresh = true; drawFood();
-}
-// Correct the pick on the spot: the Mac keeps the correction (it is applied here at once) and rebuilds for everyone.
-function editForm(p) {
-  const name = el("input",{ type:"text",id:"feName",value:p.name,"aria-label":"店名",autocomplete:"off" });
-  const area = el("input",{ type:"text",id:"feArea",value:p.area,list:"feAreas","aria-label":"城市",autocomplete:"off" });
-  const areas = el("datalist",{ id:"feAreas" },foodAreas(foodCat).slice(0,12).map(a => el("option",{ value:a })));
-  const cuisine = el("select",{ id:"feCuisine","aria-label":"菜系" },CUISINES.map(c => el("option",{ value:c,selected:c === p.cuisine },`${FOOD_EMOJI[c]} ${c}`)));
-  const temp = el("select",{ id:"feTemp","aria-label":"冷热" },["热","冷","都有"].map(t => el("option",{ value:t,selected:t === p.temp },t)));
-  const others = foodCat.places.filter(o => o.area === p.area && o.id !== p.id).sort((a, b) => a.name.localeCompare(b.name));
-  const merge = el("select",{ id:"feMerge","aria-label":"合并到" },el("option",{ value:"" },"不合并（是另一家店）"),others.map(o => el("option",{ value:o.id },o.name)));
-  const hidden = el("input",{ type:"checkbox",id:"feHidden" });
-  const save = async () => {
-    const target = others.find(o => o.id === merge.value);
-    const patch = { sources:p.sources };
-    if (hidden.checked) patch.hidden = true;
-    else if (target) Object.assign(patch,{ name:target.name,area:target.area });
-    else {
-      if (name.value.trim() && name.value.trim() !== p.name) patch.name = name.value.trim();
-      if (area.value.trim() && area.value.trim() !== p.area) patch.area = area.value.trim();
-      if (cuisine.value !== p.cuisine) patch.cuisine = cuisine.value;
-      if (temp.value !== p.temp) patch.temp = temp.value;
-    }
-    if (Object.keys(patch).length === 1) { foodEditing = false; drawFood(); return; }
-    foodSaving = true; drawFood();
-    try {
-      const r = await call({ action:"food_edit",patch });
-      foodPending.push(patch); foodCat = withPending(foodBase,foodPending); followPick(); foodEditing = false;
-      notice(r.mac?.online ? "已改好，Mac 几秒内同步到各处。" : "已改好，这台手机上已经生效；Mac 醒来后同步到各处。");
-    } catch (err) { notice(err.message,true); }
-    finally { foodSaving = false; drawFood(); }
-  };
-  return el("div",{ class:"fedit" },
-    el("h3",{},"✏️ 改一改这家店"),
-    el("label",{},"店名",name),el("label",{},"城市",area),areas,el("label",{},"菜系",cuisine),el("label",{},"冷热",temp),el("label",{},"合并到",merge),
-    el("label",{ class:"check" },hidden,"这不是吃饭的地方，以后别再抽到"),
-    el("p",{ class:"hint" },"合并后两家的记录算作同一家。改动由 Mac 记住，重新整理也不会被覆盖。"),
-    el("div",{ class:"row" },
-      el("button",{ type:"button",class:"btn cancel",onclick:() => { foodEditing = false; drawFood(); } },"取消"),
-      el("button",{ type:"button",class:"btn save",id:"feSave",disabled:foodSaving,onclick:save },foodSaving ? "保存中…" : "保存")));
-}
-function visitList(p) {
-  const box = el("div",{},el("div",{ class:"section-title",style:"margin-top:0" },`在 ${p.name} 吃过的 ${p.visits.length} 次`));
-  for (const v of p.visits) {
-    const icons = v.sources.map(s => ({ moneywiz:"💳",receipt:"🧾",calendar:"📅" })[s] || "").join("") + (v.receipts.length && !v.sources.includes("receipt") ? "🧾" : "");
-    const open = foodOpen === v.date;
-    box.append(el("button",{ type:"button",class:"visit",disabled:!v.receipts.length,"aria-expanded":v.receipts.length ? String(open) : false,
-      onclick:() => { foodOpen = open ? null : v.date; drawFood(); } },
-      el("span",{ class:"vd" },v.date),el("span",{},icons),el("span",{ class:"ve" },v.events.join("、")),
-      v.amount > 0 && el("span",{ class:"va" },usd(v.amount)),v.receipts.length ? el("span",{ class:"muted" },open ? "▴" : "▾") : null));
-    if (open) {
-      const holder = el("div",{ class:"visit-receipts" },loadingBox("正在取小票…"));
-      box.append(holder);
-      call({ action:"food_receipts",refs:v.receipts }).then(r => {
-        holder.replaceChildren(...(r.results?.length ? r.results.map(x => card(x)) : [el("div",{ class:"empty",style:"padding:12px" },"云端还没有这张小票")]));
-      }).catch(err => holder.replaceChildren(errorBox(err)));
-    }
-  }
-  return box;
-}
-$("foodReload").onclick = () => loadFood(true);
-$("logout").onclick = () => { stopChat(); store.del("passcode"); passcode = ""; for (const k of Object.keys(loaded)) delete loaded[k]; shareSnap = null; foodCat = foodBase = null; foodPending = []; txCache = {}; show(); };
+$("logout").onclick = () => { stopChat(); store.del("passcode"); passcode = ""; for (const k of Object.keys(loaded)) delete loaded[k]; shareSnap = null; txCache = {}; show(); };
 
 $("refresh").onclick = () => {
   $("notice").classList.add("hidden"); refreshLibrary();
   if (loaded.tx) { txCache = {}; openTx(); }
   if (loaded.share) loadShare(true);
   if (loaded.more) loadMore();
-  if (loaded.food) loadFood(true);
 };
 drawHistory(); drawCalendar(); show();
 setTab(store.get("tab") || "browse",{ remember:false });

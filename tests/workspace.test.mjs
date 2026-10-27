@@ -44,14 +44,14 @@ function send(f,text){input(f,'q',text);click(f,'go');}
 test('every section is a tab and only the selected pane is active',async t=>{
   const f=await fixture();t.after(f.close);
   const tabs=[...f.d.querySelectorAll('#tabs button')].map(b=>b.dataset.tab);
-  assert.deepEqual(tabs,['upload','browse','tx','share','budget','food','chat','more']);
+  assert.deepEqual(tabs,['upload','browse','tx','share','budget','chat','more']);
   assert.equal(f.d.body.dataset.tab,'browse');
   assert.equal(f.d.querySelector('#tabs [aria-selected="true"]').dataset.tab,'browse');
   f.d.querySelector('#tabs [data-tab="chat"]').click();
   assert.equal(f.d.body.dataset.tab,'chat');
   assert.equal(f.w.localStorage.getItem('tab'),'chat');
   assert.equal(f.d.getElementById('libraryCount').textContent,'2 张小票');
-  assert.equal(f.requests.some(r=>['ledger_months','share_get','reconcile_status','food_get'].includes(r.action)),false);
+  assert.equal(f.requests.some(r=>['ledger_months','share_get','reconcile_status'].includes(r.action)),false);
 });
 const ledger=[
   {id:'a',date:'2026-10-17',amount:50.99,merchant:'Aceking BBQ',descr:'ACEKING',category:'Restaurant',source:'moneywiz',receipts:[{file:'x',page:1,position:0}],flow:'spending',tags:'1/2',notes:'dinner'},
@@ -325,111 +325,4 @@ test('changes from the phone say when the Mac cannot pick them up now',async t=>
   input(f,'receiptDate','2026-10-09');
   f.d.getElementById('dateForm').requestSubmit();
   await until(()=>/Mac 上的 AutoReceipt 已退出（上次在线 3 小时前）/.test(f.d.getElementById('notice').textContent));
-});
-
-const slip={file:'2026-10-12.pdf',page:1,position:0};
-const foodCatalog={updated:'2026-10-27',cuisines:[],places:[
-  {id:'taste|las vegas',name:'Taste',cuisine:'中餐',temp:'热',area:'Las Vegas',sources:['taste|las vegas'],verdict:'red',comment:'米粉<b>好吃</b>',listName:'Taste 里的米粉',visits:[
-    {date:'2026-10-12',amount:24.06,sources:['moneywiz'],events:[],receipts:[slip]},
-    {date:'2026-09-01',amount:0,sources:['calendar'],events:['Lunch with <b>Bob</b>'],receipts:[]}]},
-  {id:'somisomi|las vegas',name:'Somisomi',cuisine:'甜品饮品',temp:'冷',area:'Las Vegas',sources:['somisomi|las vegas'],visits:[{date:'2026-09-02',amount:7,sources:['moneywiz'],events:[],receipts:[]}]},
-  {id:'in-n-out burger|davis',name:'In-N-Out Burger',cuisine:'快餐',temp:'热',area:'Davis',sources:['in-n-out burger|davis'],visits:[{date:'2025-08-01',amount:11,sources:['moneywiz'],events:[],receipts:[]}]}]};
-function foodHandler(body){
-  if(body.action==='food_get') return response({catalog:foodCatalog,updatedAt:new Date().toISOString()});
-  if(body.action==='food_receipts') return response({results:[{id:first,date:'2026-10-12',merchant:'Taste',total:24.06,currency:'USD',file:slip.file,page:1,items:[{name:'Rice Noodle',quantity:1,price:18}]}]});
-}
-test('food tab rolls among places in the last city eaten in, honours filters, and shows visits with receipts',async t=>{
-  const f=await fixture({handler:foodHandler});t.after(f.close);
-  f.w.matchMedia=()=>({matches:true});
-  f.d.querySelector('#tabs [data-tab="food"]').click();
-  await until(()=>f.d.getElementById('foodRoll'));
-  const on=()=>[...f.d.querySelectorAll('#foodBody .fchip.on')].map(b=>b.textContent);
-  assert.deepEqual(on(),['Las Vegas','随便','不限','都行']);
-  assert.match(f.d.querySelector('.pool-note').textContent,/符合条件的有 2 家/);
-  [...f.d.querySelectorAll('#foodBody .fchip')].find(b=>b.textContent==='🧊 冰冰凉').click();
-  assert.match(f.d.querySelector('.pool-note').textContent,/符合条件的有 1 家/);
-  click(f,'foodRoll');
-  await until(()=>f.d.querySelector('.pick-card'));
-  assert.match(f.d.querySelector('.pick-card .nm').textContent,/^Somisomi$/);
-  assert.equal(JSON.parse(f.w.localStorage.getItem('food')).temp,'冷');
-  [...f.d.querySelectorAll('#foodBody .fchip')].find(b=>b.textContent==='都行').click();
-  [...f.d.querySelectorAll('#foodBody .fchip')].find(b=>b.textContent==='🍟 快餐').click();
-  [...f.d.querySelectorAll('#foodBody .fchip')].find(b=>b.textContent==='Davis').click();
-  click(f,'foodRoll');
-  await until(()=>f.d.querySelector('.pick-card .nm')?.textContent==='In-N-Out Burger');
-  [...f.d.querySelectorAll('#foodBody .fchip')].find(b=>b.textContent==='🍟 快餐').click();
-  [...f.d.querySelectorAll('#foodBody .fchip')].find(b=>b.textContent==='Las Vegas').click();
-  [...f.d.querySelectorAll('#foodBody .fchip')].find(b=>b.textContent==='🥟 中餐').click();
-  click(f,'foodRoll');
-  await until(()=>f.d.querySelector('.pick-card .nm')?.textContent==='Taste');
-  assert.match(f.d.querySelector('.pick-card .st').textContent,/吃过 2 次/);
-  assert.match(f.d.querySelector('.pick-card .st').textContent,/一般每次 \$24\.06/);
-  const chip=(t)=>[...f.d.querySelectorAll('#foodBody .fchip')].find(b=>b.textContent===t);
-  chip('$50–100').click();
-  assert.match(f.d.querySelector('.pool-note').textContent,/符合条件的有 0 家/);
-  chip('$50 以内').click();
-  assert.match(f.d.querySelector('.pool-note').textContent,/符合条件的有 1 家/);
-  assert.deepEqual(JSON.parse(f.w.localStorage.getItem('food')).prices.sort(),['low','mid']);
-  chip('不限').click();
-  f.d.querySelector('.pick-card .more').click();
-  const visits=[...f.d.querySelectorAll('#foodBody .visit')];
-  assert.equal(visits.length,2);
-  assert.equal(visits[1].disabled,true);
-  assert.match(visits[1].textContent,/Lunch with <b>Bob<\/b>/);
-  visits[0].click();
-  await until(()=>f.d.querySelector('.visit-receipts .slip'));
-  assert.deepEqual(f.requests.find(r=>r.action==='food_receipts').refs,[slip]);
-  assert.match(f.d.querySelector('.visit-receipts').textContent,/Rice Noodle/);
-  assert.deepEqual(f.errors,[]);
-});
-
-test('food tab shows the Notes verdict, and a correction applies at once and goes to the Mac',async t=>{
-  const pending=[];
-  const f=await fixture({handler:(body)=>{
-    if(body.action==='food_get') return response({catalog:{...foodCatalog,places:[...foodCatalog.places,
-      {id:'四姐|las vegas',name:'四姐',cuisine:'中餐',temp:'热',area:'Las Vegas',sources:['四姐|las vegas'],verdict:'black',comment:'避雷所有',visits:[]}]},
-      updatedAt:new Date().toISOString(),pending});
-    if(body.action==='food_edit') { pending.push(body.patch); return response({ok:true,mac:{online:true}}); }
-  }});t.after(f.close);
-  f.w.matchMedia=()=>({matches:true});
-  f.d.querySelector('#tabs [data-tab="food"]').click();
-  await until(()=>f.d.getElementById('foodRoll'));
-  const chip=(t)=>[...f.d.querySelectorAll('#foodBody .fchip')].find(b=>b.textContent===t);
-  chip('🥟 中餐').click();
-  // Taste (red) and 四姐 (black, never eaten there) are both in the pool: the lists do not change the odds.
-  assert.match(f.d.querySelector('.pool-note').textContent,/符合条件的有 2 家/);
-  f.w.Math.random=()=>0.99;
-  click(f,'foodRoll');
-  await until(()=>f.d.querySelector('.pick-card .nm')?.textContent==='四姐');
-  assert.equal(f.d.querySelector('.pick-card .verdict').textContent,'👎 黑榜');
-  assert.match(f.d.querySelector('.pick-card .st').textContent,/还没吃过/);
-  assert.equal([...f.d.querySelectorAll('.pick-card .more')].map(b=>b.textContent).join(),'✏️ 改一改');
-  f.w.Math.random=()=>0;
-  click(f,'foodRoll');
-  await until(()=>f.d.querySelector('.pick-card .nm')?.textContent==='Taste');
-  assert.equal(f.d.querySelector('.pick-card .verdict').textContent,'👍 红榜');
-  assert.equal(f.d.querySelector('.pick-card .vcomment').textContent,'「Taste 里的米粉」米粉<b>好吃</b>');
-  click(f,'foodEdit');
-  input(f,'feName','Taste Noodle');
-  const cuisine=f.d.getElementById('feCuisine'); cuisine.value='东南亚';
-  click(f,'feSave');
-  await until(()=>f.d.querySelector('.pick-card .nm')?.textContent==='Taste Noodle');
-  assert.deepEqual(f.requests.find(r=>r.action==='food_edit').patch,{sources:['taste|las vegas'],name:'Taste Noodle',cuisine:'东南亚'});
-  assert.match(f.d.getElementById('notice').textContent,/Mac 几秒内同步/);
-  assert.equal(f.d.querySelector('.fedit'),null);
-  // Reloading before the Mac has taken it in still shows the correction.
-  click(f,'foodReload');
-  await until(()=>f.requests.filter(r=>r.action==='food_get').length===2 && f.d.querySelector('.pick-card .nm'));
-  assert.equal(f.d.querySelector('.pick-card .nm').textContent,'Taste Noodle');
-  // Merging into another place and hiding.
-  click(f,'foodEdit');
-  const merge=f.d.getElementById('feMerge'); merge.value='somisomi|las vegas';
-  click(f,'feSave');
-  await until(()=>f.d.querySelector('.pick-card .nm')?.textContent==='Somisomi');
-  assert.match(f.d.querySelector('.pick-card .st').textContent,/吃过 3 次/);
-  click(f,'foodEdit');
-  f.d.getElementById('feHidden').checked=true;
-  click(f,'feSave');
-  await until(()=>!f.d.querySelector('.pick-card'));
-  assert.deepEqual(f.errors,[]);
 });
