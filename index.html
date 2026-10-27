@@ -463,6 +463,21 @@
   .pick-card .more { color: var(--food); margin-top: 6px; font-size: 13.5px; }
   .spark { position: absolute; left: 50%; top: 50%; font-size: 16px; pointer-events: none; animation: burst .9s ease-out both; }
   @keyframes burst { from { transform: translate(-50%, -50%) scale(.4); opacity: 1; } to { transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y))) scale(1.3); opacity: 0; } }
+  .verdict { display: inline-block; margin-top: 8px; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; color: #fff; background: #dc3340; }
+.verdict.black { background: #3a3a3c; }
+  .verdict.mixed { background: #b8731a; }
+  .vcomment { font-size: 12.5px; color: var(--muted); margin: 5px 8px 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .pick-card .acts { display: flex; gap: 16px; justify-content: center; }
+  .fedit { background: var(--surface-2); border-radius: 16px; padding: 14px; margin: 0 0 12px; display: grid; gap: 10px; }
+  .fedit h3 { margin: 0; font-size: 15px; }
+  .fedit label { display: grid; grid-template-columns: 52px 1fr; align-items: center; gap: 8px; font-size: 14px; color: var(--muted); }
+  .fedit input[type=text], .fedit select { font: inherit; font-size: 16px; color: var(--text); background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; min-height: 40px; width: 100%; min-width: 0; }
+  .fedit label.check { display: flex; gap: 8px; color: var(--text); }
+  .fedit .hint { margin: 0; }
+  .fedit .row { display: flex; justify-content: flex-end; gap: 8px; }
+  .fedit .row .btn { padding: 10px 16px; }
+  .fedit .row .cancel { background: var(--surface); color: var(--text); border: 1px solid var(--line); }
+  .fedit .row .save { background: var(--food); color: #fff; }
   .roll { width: 100%; background: var(--food); color: #fff; font-weight: 750; font-size: 17px; padding: 15px; border-radius: 18px; box-shadow: 0 6px 18px var(--food-soft); }
   .roll:active { transform: scale(.98); }
   .roll:disabled { opacity: .45; }
@@ -1445,8 +1460,35 @@ function typical(p) {
 }
 const bracket = (a) => a < 50 ? "low" : a <= 100 ? "mid" : "high";
 const FOOD_EMOJI = { 中餐:"🥟",火锅:"🍲",韩餐:"🥘",日料:"🍣",东南亚:"🍜",美式:"🍔",快餐:"🍟",墨西哥:"🌮",西餐:"🍝",甜品饮品:"🧋",其他:"🍽️" };
-let foodCat = null, foodAt = null, foodError = null, foodLoading = null;
-let foodPick = null, foodRolling = false, foodVisits = false, foodOpen = null, foodFresh = false;
+let foodCat = null, foodBase = null, foodPending = [], foodAt = null, foodError = null, foodLoading = null;
+let foodPick = null, foodRolling = false, foodVisits = false, foodOpen = null, foodFresh = false, foodEditing = false, foodSaving = false;
+// Corrections the Mac has not taken in yet, applied on top of its catalog as it would (see FoodRoll.catalog).
+function withPending(cat, pending) {
+  if (!cat || !pending.length) return cat;
+  const byId = new Map(), places = [];
+  for (const original of cat.places) {
+    let p = { ...original, visits: [...original.visits], sources: [...(original.sources || [])] };
+    for (const e of pending) {
+      if (!e.sources?.some(x => p.sources.includes(x))) continue;
+      if (e.hidden) { p = null; break; }
+      for (const k of ["name","area","cuisine","temp"]) if (e[k]) p[k] = e[k];
+    }
+    if (!p) continue;
+    const id = (p.name + "|" + p.area).toLowerCase(), same = byId.get(id);
+    if (!same) { p.id = id; byId.set(id,p); places.push(p); continue; }
+    const days = new Map(same.visits.map(v => [v.date,{ ...v }]));
+    for (const v of p.visits) {
+      const d = days.get(v.date);
+      if (d) { d.amount += v.amount; d.receipts = [...d.receipts,...v.receipts]; d.sources = [...new Set([...d.sources,...v.sources])]; d.events = [...d.events,...v.events]; }
+      else days.set(v.date,{ ...v });
+    }
+    same.visits = [...days.values()].sort((a, b) => b.date.localeCompare(a.date));
+    same.sources.push(...p.sources);
+    same.verdict ??= p.verdict; same.comment ??= p.comment; same.listName ??= p.listName;
+  }
+  return { ...cat, places };
+}
+const followPick = () => { if (foodPick) foodPick = foodCat?.places.find(p => p.sources?.some(x => foodPick.sources?.includes(x))) || null; };
 const savedFood = (() => { try { return JSON.parse(store.get("food") || "{}"); } catch { return {}; } })();
 // area: undefined = where you ate last, null = anywhere.
 const foodF = { area: savedFood.area, cuisines: new Set(savedFood.cuisines || []), temp: savedFood.temp ?? null, prices: new Set(savedFood.prices || []) };
@@ -1474,7 +1516,11 @@ function loadFood(force = false) {
   if (foodCat && !force) { drawFood(); return Promise.resolve(); }
   $("foodBody").replaceChildren(loadingBox());
   foodLoading = (async () => {
-    try { const r = await call({ action:"food_get" }); foodCat = r.catalog || null; foodAt = r.updatedAt || null; foodError = null; }
+    try {
+      const r = await call({ action:"food_get" });
+      foodBase = r.catalog || null; foodPending = r.pending || []; foodCat = withPending(foodBase,foodPending);
+      foodAt = r.updatedAt || null; foodError = null; followPick();
+    }
     catch (err) { foodError = err; }
     finally { foodLoading = null; }
     drawFood();
@@ -1504,9 +1550,10 @@ function drawFood() {
       fchip("🧊 冰冰凉",foodF.temp === "冷",set(() => { foodF.temp = "冷"; }))]),
   ];
   const stage = el("div",{ class:"stage",id:"foodStage" });
+  const editor = foodPick && foodEditing ? editForm(foodPick) : null;
   if (foodPick) stage.append(pickCard(foodPick));
   else stage.append(el("div",{ class:"idle" },el("div",{ class:"bowl" },"🍚"),el("div",{},pool.length ? "肚子饿了？点下面抽一家" : "这样筛就没有店啦，放宽一点试试")));
-  nodes.push(stage,
+  nodes.push(stage,editor,
     el("button",{ type:"button",class:"roll",id:"foodRoll",disabled:!pool.length || foodRolling,onclick:rollFood },foodPick ? "🎲  再抽一次" : "🎲  抽一家！"),
     el("p",{ class:"pool-note" },`符合条件的有 ${pool.length} 家 · 一共 ${foodCat.places.length} 家吃过的店`));
   if (foodPick && foodVisits) nodes.push(visitList(foodPick));
@@ -1517,7 +1564,7 @@ function pickCard(p) {
   const last = p.visits[0], total = p.visits.reduce((s, v) => s + v.amount,0);
   const days = last ? Math.round((Date.parse(ymd(new Date()) + "T00:00:00Z") - Date.parse(last.date + "T00:00:00Z")) / 86400000) : 0;
   const usual = typical(p);
-  const stat = [`吃过 ${p.visits.length} 次`,last && `上次 ${last.date}（${days > 0 ? days + " 天前" : "今天"}）`,usual != null && `一般每次 ${usd(usual)}`,total > 0 && `一共 ${usd(total)}`].filter(Boolean).join(" · ");
+  const stat = !p.visits.length ? `还没吃过 · 在备忘录「LV 饮食」里` : [`吃过 ${p.visits.length} 次`,last && `上次 ${last.date}（${days > 0 ? days + " 天前" : "今天"}）`,usual != null && `一般每次 ${usd(usual)}`,total > 0 && `一共 ${usd(total)}`].filter(Boolean).join(" · ");
   // The pop and sparkles play once, when the pick lands, not on every redraw.
   const fresh = foodFresh; foodFresh = false;
   const card = el("div",{ class:"pick-card" + (fresh ? " fresh" : "") },
@@ -1525,7 +1572,11 @@ function pickCard(p) {
     el("div",{ class:"nm" },p.name),
     el("div",{ class:"tg" },[p.area && el("span",{},"📍 " + p.area),el("span",{},p.cuisine),p.temp === "冷" ? el("span",{},"🧊 冷") : p.temp === "热" ? el("span",{},"🔥 热") : null]),
     el("div",{ class:"st" },stat),
-    el("button",{ type:"button",class:"more","aria-expanded":String(foodVisits),onclick:() => { foodVisits = !foodVisits; drawFood(); } },foodVisits ? "收起 ▴" : "看看以前哪天吃的 ▾"));
+    p.verdict && el("div",{},el("span",{ class:"verdict " + p.verdict },{ red:"👍 红榜",black:"👎 黑榜",mixed:"👍👎 红黑榜都有" }[p.verdict])),
+    p.verdict && p.comment && el("div",{ class:"vcomment" },(p.listName ? `「${p.listName}」` : "") + p.comment),
+    el("div",{ class:"acts" },
+      p.visits.length ? el("button",{ type:"button",class:"more","aria-expanded":String(foodVisits),onclick:() => { foodVisits = !foodVisits; drawFood(); } },foodVisits ? "收起 ▴" : "看看以前哪天吃的 ▾") : null,
+      el("button",{ type:"button",class:"more",id:"foodEdit","aria-expanded":String(foodEditing),onclick:() => { foodEditing = !foodEditing; drawFood(); } },"✏️ 改一改")));
   const frag = document.createDocumentFragment(); frag.append(card);
   if (fresh) ["✨","⭐️","💫","✨","⭐️","💫","✨"].forEach((s, i) => {
     const a = i / 7 * 2 * Math.PI;
@@ -1537,7 +1588,7 @@ async function rollFood() {
   const pool = foodPool();
   if (!pool.length || foodRolling) return;
   const previous = foodPick;
-  foodRolling = true; foodPick = null; foodVisits = false; foodOpen = null; drawFood();
+  foodRolling = true; foodPick = null; foodVisits = false; foodOpen = null; foodEditing = false; drawFood();
   const stage = $("foodStage"), emojis = pool.slice(0,12).map(p => FOOD_EMOJI[p.cuisine] || "🍽️");
   const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
   if (!reduce) {
@@ -1556,6 +1607,45 @@ async function rollFood() {
   const others = pool.length > 1 ? pool.filter(p => p.id !== previous?.id) : pool;
   foodPick = others[Math.floor(Math.random() * others.length)];
   foodRolling = false; foodFresh = true; drawFood();
+}
+// Correct the pick on the spot: the Mac keeps the correction (it is applied here at once) and rebuilds for everyone.
+function editForm(p) {
+  const name = el("input",{ type:"text",id:"feName",value:p.name,"aria-label":"店名",autocomplete:"off" });
+  const area = el("input",{ type:"text",id:"feArea",value:p.area,list:"feAreas","aria-label":"城市",autocomplete:"off" });
+  const areas = el("datalist",{ id:"feAreas" },foodAreas(foodCat).slice(0,12).map(a => el("option",{ value:a })));
+  const cuisine = el("select",{ id:"feCuisine","aria-label":"菜系" },CUISINES.map(c => el("option",{ value:c,selected:c === p.cuisine },`${FOOD_EMOJI[c]} ${c}`)));
+  const temp = el("select",{ id:"feTemp","aria-label":"冷热" },["热","冷","都有"].map(t => el("option",{ value:t,selected:t === p.temp },t)));
+  const others = foodCat.places.filter(o => o.area === p.area && o.id !== p.id).sort((a, b) => a.name.localeCompare(b.name));
+  const merge = el("select",{ id:"feMerge","aria-label":"合并到" },el("option",{ value:"" },"不合并（是另一家店）"),others.map(o => el("option",{ value:o.id },o.name)));
+  const hidden = el("input",{ type:"checkbox",id:"feHidden" });
+  const save = async () => {
+    const target = others.find(o => o.id === merge.value);
+    const patch = { sources:p.sources };
+    if (hidden.checked) patch.hidden = true;
+    else if (target) Object.assign(patch,{ name:target.name,area:target.area });
+    else {
+      if (name.value.trim() && name.value.trim() !== p.name) patch.name = name.value.trim();
+      if (area.value.trim() && area.value.trim() !== p.area) patch.area = area.value.trim();
+      if (cuisine.value !== p.cuisine) patch.cuisine = cuisine.value;
+      if (temp.value !== p.temp) patch.temp = temp.value;
+    }
+    if (Object.keys(patch).length === 1) { foodEditing = false; drawFood(); return; }
+    foodSaving = true; drawFood();
+    try {
+      const r = await call({ action:"food_edit",patch });
+      foodPending.push(patch); foodCat = withPending(foodBase,foodPending); followPick(); foodEditing = false;
+      notice(r.mac?.online ? "已改好，Mac 几秒内同步到各处。" : "已改好，这台手机上已经生效；Mac 醒来后同步到各处。");
+    } catch (err) { notice(err.message,true); }
+    finally { foodSaving = false; drawFood(); }
+  };
+  return el("div",{ class:"fedit" },
+    el("h3",{},"✏️ 改一改这家店"),
+    el("label",{},"店名",name),el("label",{},"城市",area),areas,el("label",{},"菜系",cuisine),el("label",{},"冷热",temp),el("label",{},"合并到",merge),
+    el("label",{ class:"check" },hidden,"这不是吃饭的地方，以后别再抽到"),
+    el("p",{ class:"hint" },"合并后两家的记录算作同一家。改动由 Mac 记住，重新整理也不会被覆盖。"),
+    el("div",{ class:"row" },
+      el("button",{ type:"button",class:"btn cancel",onclick:() => { foodEditing = false; drawFood(); } },"取消"),
+      el("button",{ type:"button",class:"btn save",id:"feSave",disabled:foodSaving,onclick:save },foodSaving ? "保存中…" : "保存")));
 }
 function visitList(p) {
   const box = el("div",{},el("div",{ class:"section-title",style:"margin-top:0" },`在 ${p.name} 吃过的 ${p.visits.length} 次`));
@@ -1577,7 +1667,7 @@ function visitList(p) {
   return box;
 }
 $("foodReload").onclick = () => loadFood(true);
-$("logout").onclick = () => { stopChat(); store.del("passcode"); passcode = ""; for (const k of Object.keys(loaded)) delete loaded[k]; shareSnap = null; foodCat = null; txCache = {}; show(); };
+$("logout").onclick = () => { stopChat(); store.del("passcode"); passcode = ""; for (const k of Object.keys(loaded)) delete loaded[k]; shareSnap = null; foodCat = foodBase = null; foodPending = []; txCache = {}; show(); };
 
 $("refresh").onclick = () => {
   $("notice").classList.add("hidden"); refreshLibrary();

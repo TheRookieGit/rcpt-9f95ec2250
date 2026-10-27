@@ -329,11 +329,11 @@ test('changes from the phone say when the Mac cannot pick them up now',async t=>
 
 const slip={file:'2026-10-12.pdf',page:1,position:0};
 const foodCatalog={updated:'2026-10-27',cuisines:[],places:[
-  {id:'taste|las vegas',name:'Taste',cuisine:'中餐',temp:'热',area:'Las Vegas',visits:[
+  {id:'taste|las vegas',name:'Taste',cuisine:'中餐',temp:'热',area:'Las Vegas',sources:['taste|las vegas'],verdict:'red',comment:'米粉<b>好吃</b>',listName:'Taste 里的米粉',visits:[
     {date:'2026-10-12',amount:24.06,sources:['moneywiz'],events:[],receipts:[slip]},
     {date:'2026-09-01',amount:0,sources:['calendar'],events:['Lunch with <b>Bob</b>'],receipts:[]}]},
-  {id:'somisomi|las vegas',name:'Somisomi',cuisine:'甜品饮品',temp:'冷',area:'Las Vegas',visits:[{date:'2026-09-02',amount:7,sources:['moneywiz'],events:[],receipts:[]}]},
-  {id:'in-n-out burger|davis',name:'In-N-Out Burger',cuisine:'快餐',temp:'热',area:'Davis',visits:[{date:'2025-08-01',amount:11,sources:['moneywiz'],events:[],receipts:[]}]}]};
+  {id:'somisomi|las vegas',name:'Somisomi',cuisine:'甜品饮品',temp:'冷',area:'Las Vegas',sources:['somisomi|las vegas'],visits:[{date:'2026-09-02',amount:7,sources:['moneywiz'],events:[],receipts:[]}]},
+  {id:'in-n-out burger|davis',name:'In-N-Out Burger',cuisine:'快餐',temp:'热',area:'Davis',sources:['in-n-out burger|davis'],visits:[{date:'2025-08-01',amount:11,sources:['moneywiz'],events:[],receipts:[]}]}]};
 function foodHandler(body){
   if(body.action==='food_get') return response({catalog:foodCatalog,updatedAt:new Date().toISOString()});
   if(body.action==='food_receipts') return response({results:[{id:first,date:'2026-10-12',merchant:'Taste',total:24.06,currency:'USD',file:slip.file,page:1,items:[{name:'Rice Noodle',quantity:1,price:18}]}]});
@@ -380,5 +380,56 @@ test('food tab rolls among places in the last city eaten in, honours filters, an
   await until(()=>f.d.querySelector('.visit-receipts .slip'));
   assert.deepEqual(f.requests.find(r=>r.action==='food_receipts').refs,[slip]);
   assert.match(f.d.querySelector('.visit-receipts').textContent,/Rice Noodle/);
+  assert.deepEqual(f.errors,[]);
+});
+
+test('food tab shows the Notes verdict, and a correction applies at once and goes to the Mac',async t=>{
+  const pending=[];
+  const f=await fixture({handler:(body)=>{
+    if(body.action==='food_get') return response({catalog:{...foodCatalog,places:[...foodCatalog.places,
+      {id:'四姐|las vegas',name:'四姐',cuisine:'中餐',temp:'热',area:'Las Vegas',sources:['四姐|las vegas'],verdict:'black',comment:'避雷所有',visits:[]}]},
+      updatedAt:new Date().toISOString(),pending});
+    if(body.action==='food_edit') { pending.push(body.patch); return response({ok:true,mac:{online:true}}); }
+  }});t.after(f.close);
+  f.w.matchMedia=()=>({matches:true});
+  f.d.querySelector('#tabs [data-tab="food"]').click();
+  await until(()=>f.d.getElementById('foodRoll'));
+  const chip=(t)=>[...f.d.querySelectorAll('#foodBody .fchip')].find(b=>b.textContent===t);
+  chip('🥟 中餐').click();
+  // Taste (red) and 四姐 (black, never eaten there) are both in the pool: the lists do not change the odds.
+  assert.match(f.d.querySelector('.pool-note').textContent,/符合条件的有 2 家/);
+  f.w.Math.random=()=>0.99;
+  click(f,'foodRoll');
+  await until(()=>f.d.querySelector('.pick-card .nm')?.textContent==='四姐');
+  assert.equal(f.d.querySelector('.pick-card .verdict').textContent,'👎 黑榜');
+  assert.match(f.d.querySelector('.pick-card .st').textContent,/还没吃过/);
+  assert.equal([...f.d.querySelectorAll('.pick-card .more')].map(b=>b.textContent).join(),'✏️ 改一改');
+  f.w.Math.random=()=>0;
+  click(f,'foodRoll');
+  await until(()=>f.d.querySelector('.pick-card .nm')?.textContent==='Taste');
+  assert.equal(f.d.querySelector('.pick-card .verdict').textContent,'👍 红榜');
+  assert.equal(f.d.querySelector('.pick-card .vcomment').textContent,'「Taste 里的米粉」米粉<b>好吃</b>');
+  click(f,'foodEdit');
+  input(f,'feName','Taste Noodle');
+  const cuisine=f.d.getElementById('feCuisine'); cuisine.value='东南亚';
+  click(f,'feSave');
+  await until(()=>f.d.querySelector('.pick-card .nm')?.textContent==='Taste Noodle');
+  assert.deepEqual(f.requests.find(r=>r.action==='food_edit').patch,{sources:['taste|las vegas'],name:'Taste Noodle',cuisine:'东南亚'});
+  assert.match(f.d.getElementById('notice').textContent,/Mac 几秒内同步/);
+  assert.equal(f.d.querySelector('.fedit'),null);
+  // Reloading before the Mac has taken it in still shows the correction.
+  click(f,'foodReload');
+  await until(()=>f.requests.filter(r=>r.action==='food_get').length===2 && f.d.querySelector('.pick-card .nm'));
+  assert.equal(f.d.querySelector('.pick-card .nm').textContent,'Taste Noodle');
+  // Merging into another place and hiding.
+  click(f,'foodEdit');
+  const merge=f.d.getElementById('feMerge'); merge.value='somisomi|las vegas';
+  click(f,'feSave');
+  await until(()=>f.d.querySelector('.pick-card .nm')?.textContent==='Somisomi');
+  assert.match(f.d.querySelector('.pick-card .st').textContent,/吃过 3 次/);
+  click(f,'foodEdit');
+  f.d.getElementById('feHidden').checked=true;
+  click(f,'feSave');
+  await until(()=>!f.d.querySelector('.pick-card'));
   assert.deepEqual(f.errors,[]);
 });
