@@ -641,7 +641,7 @@ const icon = (name) => { const s = document.createElementNS("http://www.w3.org/2
 function card(r,{ editable = false } = {}) {
   const name = r.merchant || "未识别商家", items = r.items || [];
   const acts = el("div",{ class:"r-acts" });
-  if (r.view_url) acts.append(el("button",{ type:"button",title:"查看原件","aria-label":`查看 ${name} 的原件`,onclick:()=>lightbox(r.view_url) },icon("doc")));
+  if (r.view_url || r.view_path) acts.append(el("button",{ type:"button",title:"查看原件","aria-label":`查看 ${name} 的原件`,onclick:()=>openView(r) },icon("doc")));
   if (editable) acts.append(
     el("button",{ type:"button",title:"修改日期","aria-label":`修改 ${name} 的日期`,onclick:()=>editDate(r) },icon("cal")),
     el("button",{ type:"button",class:"delete",title:"从项目库删除","aria-label":`从项目库删除 ${name}`,onclick:()=>confirmDelete(r) },icon("trash")));
@@ -667,6 +667,11 @@ function card(r,{ editable = false } = {}) {
   }
   draw();
   return el("div",{ class:"slip receipt-card","data-receipt-id":r.id },paper);
+}
+/* Cards from a saved conversation keep no link (they expire after an hour) and fetch one when opened. */
+async function openView(r) {
+  if (!r.view_url) try { r.view_url = (await call({ action:"view",id:r.id })).view_url; } catch (err) { notice(err.message,true); return; }
+  if (r.view_url) lightbox(r.view_url); else notice("这张小票没有原件图片",true);
 }
 function dayGroups(list,withHeader = true) {
   const nodes = []; let date;
@@ -731,14 +736,39 @@ $("deleteForm").onsubmit = async e => {
   finally { deletingReceipt = false; $("deleteSave").disabled = false; $("deleteCancel").disabled = false; }
 };
 
-/* Chat cancellation also guards against responses that arrive after the next question. */
-let turns = [], activeChat = null;
-const loadHistory = () => { try { const v=JSON.parse(store.get("history") || "[]"); return Array.isArray(v) ? v.filter(x=>typeof x === "string").slice(0,10) : []; } catch { return []; } };
+/* Chat cancellation also guards against responses that arrive after the next question.
+   Conversations are kept on this device whole, answers and receipts included, so opening one from 最近问过 shows it
+   as it was instead of asking again. Entries saved before that hold only the question, and those still ask again. */
+let turns = [], activeChat = null, chatId = null, chatLog = [];
+const loadHistory = () => {
+  try {
+    const v = JSON.parse(store.get("chats") || store.get("history") || "[]");
+    return Array.isArray(v) ? v.map(x => typeof x === "string" ? { title:x } : x).filter(x => typeof x?.title === "string").slice(0,10) : [];
+  } catch { return []; }
+};
 function drawHistory() {
   const list = loadHistory(); $("historyBox").classList.toggle("hidden",!list.length);
-  $("history").replaceChildren(...list.map(q=>el("button",{ class:"chip",onclick:()=>ask(q) },q)));
+  $("history").replaceChildren(...list.map(c=>el("button",{ class:"chip",onclick:()=>c.turns ? openChat(c) : ask(c.title) },
+    c.turns?.length > 1 ? `${c.title} · ${c.turns.length} 轮` : c.title)));
 }
-function remember(q) { store.set("history",JSON.stringify([q,...loadHistory().filter(h=>h!==q)].slice(0,10))); drawHistory(); }
+// Links to receipt images expire, so they are left out. If the device is out of room, the oldest conversations go first.
+function saveChat() {
+  const entry = { id:chatId,title:chatLog[0].q,at:new Date().toISOString(),turns:chatLog };
+  const list = [entry,...loadHistory().filter(c => c.id !== chatId && c.title !== entry.title)].slice(0,10);
+  for (let n = list.length; n > 0; n--) {
+    try { localStorage.setItem("chats",JSON.stringify(list.slice(0,n),(k,v) => k === "view_url" ? undefined : v)); break; } catch {}
+  }
+  store.del("history"); drawHistory();
+}
+function openChat(c) {
+  if (activeChat) return;
+  chatId = c.id; chatLog = c.turns;
+  turns = chatLog.slice(-6).map(t => ({ q:t.q,a:t.r.answer }));
+  $("chatEmpty").classList.add("hidden");
+  $("chatLog").replaceChildren(el("p",{ class:"hint" },`${relTime(c.at)}的对话，直接显示当时的回答，没有重新查询`),
+    ...chatLog.flatMap(t => [el("div",{ class:"bubble me" },t.q),replyBlock({ ...t.r })]));
+  setChatBusy(); toEnd();
+}
 function toEnd() { $("chatScroll").scrollTo({ top:$("chatScroll").scrollHeight,behavior:"smooth" }); }
 function setChatBusy() {
   const busy = !!activeChat;
@@ -890,6 +920,7 @@ async function ask(text) {
   const q = (text ?? $("q").value).trim();
   if (!q || activeChat) return;
   if (q.length>500) { notice("问题不能超过 500 个字",true); return; }
+  if (!chatId) chatId = Date.now().toString(36);
   const request = { controller:new AbortController(),wait:el("div",{ class:"bubble ai muted" },el("span",{ class:"spin" }),"正在翻小票…") };
   activeChat = request; $("q").value = ""; $("chatEmpty").classList.add("hidden");
   $("chatLog").append(el("div",{ class:"bubble me" },q),request.wait); setChatBusy(); toEnd();
@@ -900,7 +931,10 @@ async function ask(text) {
     if (activeChat !== request || request.controller.signal.aborted) return;
     request.wait.replaceWith(replyBlock(r));
     turns = [...turns,{ q,a:r.answer,events:r.events }].slice(-6);
-    if (r.onTopic) remember(q);
+    // Drafted events are confirmed once, in the moment; the saved copy keeps only what was said about them.
+    chatLog = [...chatLog,{ q,r:{ answer:r.answer,onTopic:r.onTopic,results:r.results || [],
+      scope:r.drafts?.length ? `${r.scope} · 草稿只能在当时确认` : r.scope } }].slice(-20);
+    if (chatLog.some(t => t.r.onTopic)) saveChat();
   } catch (err) {
     if (activeChat !== request || request.controller.signal.aborted) return;
     request.wait.className = "bubble ai bad"; request.wait.replaceChildren(err.message);
@@ -921,7 +955,7 @@ $("q").addEventListener("keydown",e => {
 $("q").oninput = setChatBusy;
 $("newChat").onclick = () => {
   if (activeChat) return;
-  turns = []; $("chatLog").replaceChildren(); $("chatEmpty").classList.remove("hidden"); setChatBusy();
+  turns = []; chatId = null; chatLog = []; $("chatLog").replaceChildren(); $("chatEmpty").classList.remove("hidden"); setChatBusy();
 };
 document.querySelectorAll("[data-question]").forEach(b=>b.onclick=()=>ask(b.dataset.question));
 document.addEventListener("keydown",e => {

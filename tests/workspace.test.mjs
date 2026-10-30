@@ -198,6 +198,30 @@ test('stop aborts the fetch, preserves the draft, and ignores a late reply',asyn
   assert.deepEqual(f.chats[2].body.history,[{q:'second',a:'current reply'}]);
   click(f,'go');
 });
+test('a saved conversation opens as it was, without asking again, and can go on',async t=>{
+  const f=await fixture({handler:b=>b.action==='view'?response({view_url:'https://img.test/fresh.jpg'}):null});t.after(f.close);
+  const slip={id:first,date:'2026-10-08',merchant:'China Mama',total:42,currency:'USD',view_path:'v/1.jpg',view_url:'https://img.test/old.jpg',items:[{name:'Dumplings',quantity:1,price:12}]};
+  send(f,'china mama 吃了啥');await until(()=>f.chats.length===1);
+  f.chats[0].resolve(response({answer:'吃了饺子',onTopic:true,scope:'全部',results:[slip]}));
+  await until(()=>f.d.getElementById('go').textContent==='发送');
+  send(f,'多少钱');await until(()=>f.chats.length===2);
+  f.chats[1].resolve(response({answer:'42 刀',onTopic:true,results:[]}));
+  await until(()=>f.d.getElementById('go').textContent==='发送');
+  assert.equal(f.w.localStorage.getItem('chats').includes('old.jpg'),false);
+  click(f,'newChat');
+  const chip=f.d.querySelector('#history .chip');
+  assert.equal(chip.textContent,'china mama 吃了啥 · 2 轮');
+  chip.click();
+  const log=f.d.getElementById('chatLog').textContent;
+  assert.match(log,/吃了饺子/);assert.match(log,/42 刀/);assert.match(log,/Dumplings/);
+  assert.equal(f.chats.length,2);
+  f.d.querySelector('#chatLog .r-acts button').click();
+  await until(()=>f.d.querySelector('#lightbox img').src==='https://img.test/fresh.jpg');
+  assert.deepEqual(f.requests.at(-1),{action:'view',id:first});
+  send(f,'还有呢');await until(()=>f.chats.length===3);
+  assert.deepEqual(f.chats[2].body.history,[{q:'china mama 吃了啥',a:'吃了饺子'},{q:'多少钱',a:'42 刀'}]);
+  click(f,'go');
+});
 test('Escape cancels, and Enter while waiting does not accidentally send or stop',async t=>{
   const f=await fixture();t.after(f.close);
   send(f,'first');await until(()=>f.chats.length===1);
